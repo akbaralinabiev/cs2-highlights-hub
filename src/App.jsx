@@ -12,10 +12,24 @@ const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust
 const MAX_VIDEO_SIZE_BYTES = 50_000_000;
 const MAX_VIDEO_SIZE_LABEL = "50 MB";
 const VIDEO_SIZE_ERROR = `Supabase's current Free plan limit is 50 MB per file. Compress the video or upgrade the Supabase plan to upload larger files.`;
+const tagColorClasses = {
+  "3k": "tag-blue",
+  "4k": "tag-purple",
+  ace: "tag-orange",
+  "1v2 clutch": "tag-cyan",
+  "1v3 clutch": "tag-teal",
+  clutch: "tag-pink",
+  entry: "tag-green",
+  retake: "tag-yellow",
+};
 
 function videoSizeError(file) {
   if (file.size <= MAX_VIDEO_SIZE_BYTES) return "";
   return `This video is larger than ${MAX_VIDEO_SIZE_LABEL}. ${VIDEO_SIZE_ERROR}`;
+}
+
+function getTagColorClass(tag) {
+  return tagColorClasses[tag.toLowerCase()] ?? "";
 }
 
 function FilterDropdown({ label, value, options, onChange }) {
@@ -132,7 +146,7 @@ function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) 
         </div>
         <div className="clip-engagement-row">
           <div className="tags">
-            {clip.tags.map((tag) => <span key={tag} className={`tag ${tag.toLowerCase().includes("clutch") ? "tag-cyan" : tag === "Ace" ? "tag-orange" : ""}`}>{tag.includes("clutch") && "● "}{tag}</span>)}
+            {clip.tags.map((tag) => <span key={tag} className={`tag ${getTagColorClass(tag)}`}>{tag.toLowerCase().includes("clutch") && "● "}{tag}</span>)}
           </div>
           <button className={`like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-label={`${clip.liked ? "Unlike" : "Like"} ${clip.title}; ${clip.likeCount ?? 0} likes`} aria-pressed={Boolean(clip.liked)}>
             <Heart size={15} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0}</span>
@@ -161,7 +175,7 @@ function Modal({ clip, onClose, onLike }) {
           <div><span className="eyebrow">{clip.map}</span><h2>{clip.title}</h2></div>
         </div>
         <div className="modal-engagement-row">
-          <div className="tags">{clip.tags.map(t => <span key={t} className="tag">{t}</span>)}</div>
+          <div className="tags">{clip.tags.map(t => <span key={t} className={`tag ${getTagColorClass(t)}`}>{t}</span>)}</div>
           <button className={`like-button modal-like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-pressed={Boolean(clip.liked)}>
             <Heart size={16} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0} likes</span>
           </button>
