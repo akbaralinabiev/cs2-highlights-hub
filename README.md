@@ -8,7 +8,7 @@ A React + Vite frontend prototype for a personal CS2 highlights website and admi
 - Search, map/type filters, sort order
 - Clip detail modal
 - Public highlights gallery with no visitor-facing upload or dashboard controls
-- Public pages: `/#highlights` for the main gallery and `/#about` for Steam/FACEIT profile links
+- Public pages: `/#highlights` for the full landing page and gallery, and `/#about` for Steam/FACEIT profile links
 - Owner sign-in via Supabase Auth at `/#admin` (requires project configuration and an allowlisted account)
 
 ## Important: prototype vs production

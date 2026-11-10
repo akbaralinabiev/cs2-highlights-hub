@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import * as tus from "tus-js-client";
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, toClip } from "./lib/supabase.js";
 import {
-  ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, ExternalLink,
+  Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, ExternalLink,
   Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart,
   LayoutDashboard, LogOut, Pencil, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
@@ -577,7 +577,18 @@ function App() {
       </header>
       {route === "highlights" ? (
         <main>
-          <section className="highlights-section highlights-page" id="highlights">
+          <section className="hero">
+            <div className="hero-grid"/>
+            <div className="hero-content">
+              <div className="hero-kicker"><span/> PERSONAL CS2 LIBRARY</div>
+              <h1>Every round has<br/>a <em>story.</em></h1>
+              <p>A collection of clutches, clean entries, and rounds worth remembering.</p>
+              <div className="hero-actions"><a className="primary-button" href="#collection"><Clapperboard size={16}/> Explore highlights</a></div>
+            </div>
+            <div className="hero-aside"><div className="crosshair-large"><Crosshair size={92} strokeWidth={0.8}/></div><span className="aside-line"/> <span className="aside-caption">RECORDED MOMENTS / 001—∞</span></div>
+            <div className="hero-bottom"><span><Activity size={14}/> CLIP ARCHIVE</span><span>COUNTER-STRIKE 2 <b>●</b> PERSONAL COLLECTION</span><span>EST. 2026</span></div>
+          </section>
+          <section className="highlights-section" id="collection">
           <div className="section-top"><div><span className="eyebrow">THE COLLECTION</span><h2>Latest highlights <span className="count-badge">{clips.length.toString().padStart(2,"0")}</span></h2><p className="section-description">The rounds that deserve a replay.</p></div></div>
           {dataError && <p className="auth-error" role="alert">{dataError}</p>}
           {dataLoading && <p className="section-description" role="status">Loading highlights…</p>}
