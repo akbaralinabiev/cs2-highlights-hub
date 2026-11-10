@@ -69,10 +69,12 @@ function Modal({ clip, onClose, onLike }) {
         <div className="modal-content">
           <div><span className="eyebrow">{clip.map}</span><h2>{clip.title}</h2></div>
         </div>
-        <div className="tags">{clip.tags.map(t => <span key={t} className="tag">{t}</span>)}</div>
-        <button className={`like-button modal-like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-pressed={Boolean(clip.liked)}>
-          <Heart size={16} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0} likes</span>
-        </button>
+        <div className="modal-engagement-row">
+          <div className="tags">{clip.tags.map(t => <span key={t} className="tag">{t}</span>)}</div>
+          <button className={`like-button modal-like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-pressed={Boolean(clip.liked)}>
+            <Heart size={16} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0} likes</span>
+          </button>
+        </div>
       </div>
     </div>
   );

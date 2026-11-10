@@ -12,3 +12,4 @@
 @media(max-width:800px){.site-header{gap:12px}.main-nav{display:flex;gap:12px;font-size:11px}}
 @media(max-width:430px){.main-nav{gap:9px;font-size:10px}.brand{gap:7px;letter-spacing:.1em}}
 .clip-engagement-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:14px}.clip-engagement-row .tags{flex:1;margin-top:0}.clip-engagement-row .like-button{flex:none;margin-top:0}
+.modal-engagement-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 22px 22px}.modal-engagement-row .tags{flex:1;min-width:0;margin:0;padding:0;min-height:0}.modal-engagement-row .modal-like-button{flex:none;margin:0;white-space:nowrap}
