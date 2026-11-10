@@ -34,14 +34,15 @@ create table if not exists public.highlights (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   map text not null,
-  round integer not null check (round between 1 and 60),
-  score text not null,
   tags text[] not null default '{}',
   video_path text,
   featured boolean not null default false,
   is_published boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter table public.highlights drop column if exists round;
+alter table public.highlights drop column if exists score;
 
 alter table public.highlights enable row level security;
 grant select on public.highlights to anon, authenticated;

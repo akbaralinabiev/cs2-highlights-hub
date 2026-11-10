@@ -9,18 +9,18 @@ import {
 } from "lucide-react";
 
 const initialClips = [
-  { id: 1, title: "Triple threat", round: 20, score: "7:13", map: "Mirage", date: "8 Nov 2026", tags: ["3K"], color: "blue", featured: true },
-  { id: 2, title: "Carried the round", round: 7, score: "7:13", map: "Mirage", date: "8 Nov 2026", tags: ["3K"], color: "blue" },
-  { id: 3, title: "Clutched a 1v2 situation", round: 5, score: "13:7", map: "Mirage", date: "8 Nov 2026", tags: ["1v2 clutch"], color: "cyan" },
-  { id: 4, title: "Clutched a 1v2 situation", round: 4, score: "13:7", map: "Mirage", date: "8 Nov 2026", tags: ["1v2 clutch"], color: "cyan" },
-  { id: 5, title: "Triple kill", round: 3, score: "13:7", map: "Mirage", date: "8 Nov 2026", tags: ["3K", "1v3 clutch"], color: "blue" },
-  { id: 6, title: "Three frags, one round", round: 14, score: "13:4", map: "Cache", date: "8 Nov 2026", tags: ["3K"], color: "blue" },
-  { id: 7, title: "Triple threat", round: 8, score: "13:4", map: "Cache", date: "8 Nov 2026", tags: ["3K"], color: "blue" },
-  { id: 8, title: "Triple kill", round: 3, score: "3:13", map: "Nuke", date: "8 Nov 2026", tags: ["3K"], color: "blue" },
-  { id: 9, title: "Clean retake", round: 11, score: "13:9", map: "Ancient", date: "7 Nov 2026", tags: ["Retake"], color: "green" },
-  { id: 10, title: "Last-second defuse", round: 22, score: "16:14", map: "Inferno", date: "6 Nov 2026", tags: ["Clutch"], color: "cyan" },
-  { id: 11, title: "No time to reload", round: 18, score: "13:10", map: "Dust II", date: "5 Nov 2026", tags: ["Ace"], color: "orange" },
-  { id: 12, title: "The opening pick", round: 2, score: "13:6", map: "Anubis", date: "4 Nov 2026", tags: ["Entry"], color: "blue" }
+  { id: 1, title: "Triple threat", map: "Mirage", date: "8 Nov 2026", tags: ["3K"], featured: true },
+  { id: 2, title: "Carried the round", map: "Mirage", date: "8 Nov 2026", tags: ["3K"] },
+  { id: 3, title: "Clutched a 1v2 situation", map: "Mirage", date: "8 Nov 2026", tags: ["1v2 clutch"] },
+  { id: 4, title: "Clutched a 1v2 situation", map: "Mirage", date: "8 Nov 2026", tags: ["1v2 clutch"] },
+  { id: 5, title: "Triple kill", map: "Mirage", date: "8 Nov 2026", tags: ["3K", "1v3 clutch"] },
+  { id: 6, title: "Three frags, one round", map: "Cache", date: "8 Nov 2026", tags: ["3K"] },
+  { id: 7, title: "Triple threat", map: "Cache", date: "8 Nov 2026", tags: ["3K"] },
+  { id: 8, title: "Triple kill", map: "Nuke", date: "8 Nov 2026", tags: ["3K"] },
+  { id: 9, title: "Clean retake", map: "Ancient", date: "7 Nov 2026", tags: ["Retake"] },
+  { id: 10, title: "Last-second defuse", map: "Inferno", date: "6 Nov 2026", tags: ["Clutch"] },
+  { id: 11, title: "No time to reload", map: "Dust II", date: "5 Nov 2026", tags: ["Ace"] },
+  { id: 12, title: "The opening pick", map: "Anubis", date: "4 Nov 2026", tags: ["Entry"] }
 ];
 
 const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis"];
@@ -44,14 +44,12 @@ function ClipCard({ clip, onOpen, admin, onDelete, onFeature }) {
       <div className="clip-info">
         <div className="clip-title-line">
           <h3>{clip.title}</h3>
-          <span className="round">Round {clip.round}</span>
         </div>
         <div className="tags">
           {clip.tags.map((tag) => <span key={tag} className={`tag ${tag.toLowerCase().includes("clutch") ? "tag-cyan" : tag === "Ace" ? "tag-orange" : ""}`}>{tag.includes("clutch") && "● "}{tag}</span>)}
         </div>
         <div className="clip-divider" />
         <div className="clip-meta">
-          <strong className={clip.score.startsWith("13") || clip.score.startsWith("16") ? "score-win" : "score-loss"}>{clip.score}</strong>
           <span className="map-name"><span className="map-emblem">✦</span>{clip.map}</span>
           <span className="clip-date">{clip.date}</span>
         </div>
@@ -70,8 +68,7 @@ function Modal({ clip, onClose }) {
           ? <video src={clip.videoUrl} controls autoPlay playsInline />
           : <><Video size={42}/><p>No video file is attached</p><small>This is a demo highlight.</small></>}</div>
         <div className="modal-content">
-          <div><span className="eyebrow">{clip.map} · Round {clip.round}</span><h2>{clip.title}</h2></div>
-          <span className="score-chip">{clip.score}</span>
+          <div><span className="eyebrow">{clip.map}</span><h2>{clip.title}</h2></div>
         </div>
         <div className="tags">{clip.tags.map(t => <span key={t} className="tag">{t}</span>)}</div>
       </div>
@@ -82,8 +79,6 @@ function Modal({ clip, onClose }) {
 function UploadModal({ onClose, onAdd }) {
   const [title, setTitle] = useState("");
   const [map, setMap] = useState("Mirage");
-  const [round, setRound] = useState("1");
-  const [score, setScore] = useState("13:7");
   const [tag, setTag] = useState("3K");
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
@@ -96,7 +91,7 @@ function UploadModal({ onClose, onAdd }) {
     setBusy(true);
     setError("");
     try {
-      await onAdd({ title: title.trim(), map, round: Number(round) || 1, score: score.trim(), tags: [tag], file, onProgress: setProgress });
+      await onAdd({ title: title.trim(), map, tags: [tag], file, onProgress: setProgress });
       onClose();
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : String(uploadError));
@@ -117,8 +112,6 @@ function UploadModal({ onClose, onAdd }) {
           <div className="field"><label htmlFor="title">Highlight title</label><input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. 1v3 clutch on Mirage" /></div>
           <div className="form-grid">
             <div className="field"><label htmlFor="map">Map</label><select id="map" value={map} onChange={e => setMap(e.target.value)}>{maps.slice(1).map(m => <option key={m}>{m}</option>)}</select></div>
-            <div className="field"><label htmlFor="round">Round</label><input id="round" type="number" min="1" max="60" value={round} onChange={e => setRound(e.target.value)} /></div>
-            <div className="field"><label htmlFor="score">Match score</label><input id="score" value={score} onChange={e => setScore(e.target.value)} placeholder="13:7" /></div>
             <div className="field"><label htmlFor="tag">Highlight type</label><select id="tag" value={tag} onChange={e => setTag(e.target.value)}>{["3K", "4K", "Ace", "1v2 clutch", "1v3 clutch", "Clutch", "Entry", "Retake"].map(t => <option key={t}>{t}</option>)}</select></div>
           </div>
           {busy && <div className="upload-progress"><span>Uploading video… {progress}%</span><progress max="100" value={progress}/></div>}
@@ -154,7 +147,7 @@ function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized,
             <div className="page-title-row"><div><span className="eyebrow">YOUR PERSONAL LIBRARY</span><h1>Dashboard</h1><p className="subheading">Your CS2 moments, organized in one place.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>
             <div className="stat-grid"><div className="stat-card"><span className="stat-icon"><Film size={18}/></span><span className="stat-label">TOTAL HIGHLIGHTS</span><strong>{loading ? "…" : clips.length}</strong><small>In your library</small></div><div className="stat-card"><span className="stat-icon"><Star size={18}/></span><span className="stat-label">FEATURED CLIPS</span><strong>{clips.filter(c => c.featured).length}</strong><small>Shown as favorites</small></div><div className="stat-card"><span className="stat-icon"><Database size={18}/></span><span className="stat-label">STORAGE STATUS</span><strong>Connected</strong><small>Supabase Storage</small></div></div>
             <div className="section-heading"><div><h2>Recent highlights</h2><p>Manage your latest clips</p></div><button className="text-button" onClick={() => setSection("Highlights")}>View all <ArrowLeft className="arrow-right" size={14}/></button></div>
-            {loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-list">{clips.slice(0, 5).map(c => <div className="admin-list-row" key={c.id}><div className="mini-video"><Video size={17}/></div><div className="list-title"><strong>{c.title}</strong><span>{c.map} · Round {c.round}</span></div><span className="list-score">{c.score}</span><span className="draft-pill">{c.is_published ? "Published" : "Draft"}</span><button className="icon-button danger-quiet" onClick={() => onDelete(c.id)} title="Delete highlight"><Trash2 size={15}/></button></div>)}</div>}
+            {loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-list">{clips.slice(0, 5).map(c => <div className="admin-list-row" key={c.id}><div className="mini-video"><Video size={17}/></div><div className="list-title"><strong>{c.title}</strong><span>{c.map}</span></div><span className="draft-pill">{c.is_published ? "Published" : "Draft"}</span><button className="icon-button danger-quiet" onClick={() => onDelete(c.id)} title="Delete highlight"><Trash2 size={15}/></button></div>)}</div>}
           </>}
           {section === "Highlights" && <><div className="page-title-row"><div><span className="eyebrow">CONTENT LIBRARY</span><h1>Highlights</h1><p className="subheading">Edit, feature or remove clips.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>{loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-grid">{clips.map(c => <ClipCard key={c.id} clip={c} onOpen={() => {}} admin onDelete={onDelete} onFeature={onFeature}/>)}</div>}</>}
           {section === "Uploads" && <><div className="page-title-row"><div><span className="eyebrow">MEDIA STORAGE</span><h1>Uploads</h1><p className="subheading">Videos upload directly to your Supabase Storage bucket.</p></div><button className="primary-button" onClick={onUpload}><UploadCloud size={16}/> New upload</button></div><div className="setup-card"><div className="setup-icon"><HardDrive size={25}/></div><h2>Supabase Storage connected</h2><p>Videos are uploaded directly to your highlights bucket using resumable transfers. The bucket’s configured file-size limit and your Supabase plan apply.</p><div className="setup-steps"><span><Check size={15}/> Owner-only upload policies enabled</span><span><Check size={15}/> Video metadata saved in highlights</span><span><Check size={15}/> Published clips appear in the public gallery</span></div><span className="coming-soon">SUPABASE STORAGE</span></div></>}
@@ -434,8 +427,6 @@ function App() {
     const { data, error } = await supabase.from("highlights").insert({
       title: metadata.title,
       map: metadata.map,
-      round: metadata.round,
-      score: metadata.score,
       tags: metadata.tags,
       video_path: objectPath,
       is_published: true,

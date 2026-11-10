@@ -17,8 +17,6 @@ export function toClip(row) {
     id: row.id,
     title: row.title,
     map: row.map,
-    round: row.round,
-    score: row.score,
     tags: row.tags ?? [],
     featured: row.featured,
     is_published: row.is_published,

@@ -26,7 +26,7 @@ The app uses Supabase Auth, Postgres and Storage for owner-managed video publish
 1. Create a Supabase project and copy its Project URL and anon/public key.
 2. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in the frontend.
 3. In Supabase Auth, disable public sign-ups and create/invite your owner account.
-4. Run the complete [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor. Re-run it if the app previously reported that `admin_users` was missing; it is safe to re-run.
+4. Run the complete [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor. Re-run it if the app previously reported that `admin_users` was missing; it is safe to re-run. It also removes the old `round` and `score` columns from an existing highlights table.
 5. Add your account to the owner allowlist in the SQL Editor:
 
    ```sql
@@ -63,7 +63,7 @@ npm run preview
 - **Database and auth:** Supabase Postgres + Supabase Auth
 - **Video files:** Supabase Storage (or another object-storage provider)
 - **Uploads:** browser uploads directly with the signed-in owner session and resumable transfers; never send large videos through a Vercel/Netlify function
-- **Metadata:** save title, map, round, score, tags, video object key, thumbnail object key, visibility, and timestamps in the database
+- **Metadata:** save title, map, highlight type, video object key, visibility, and timestamps in the database
 - **Admin security:** Supabase Auth plus RLS authorization on every database and storage write. Hiding a dashboard link is not access control.
 
 ### Storage note
