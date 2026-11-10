@@ -1,4 +1,4 @@
-# Clutch Archive — CS2 Highlights Hub
+# thefear14 — CS2 Highlights Hub
 
 A responsive Counter-Strike 2 highlights site built with React, Vite, and Supabase. Visitors can browse and like published videos; the allowlisted owner can upload and manage highlights.
 

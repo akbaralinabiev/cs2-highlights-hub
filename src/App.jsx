@@ -126,7 +126,7 @@ function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized,
   return (
     <div className="admin-shell">
       <aside className="sidebar">
-        <button className="brand brand-button" onClick={onBack}><span className="brand-mark"><Crosshair size={19}/></span><span>CLUTCH<span className="brand-muted">ARCHIVE</span></span></button>
+        <button className="brand brand-button" onClick={onBack}><span className="brand-mark"><Crosshair size={19}/></span><span>THE<span className="brand-muted">FEAR14</span></span></button>
         <div className="sidebar-label">WORKSPACE</div>
         {nav.map(item => <button key={item.name} className={`nav-item ${section === item.name ? "active" : ""}`} onClick={() => setSection(item.name)}><item.icon size={17}/>{item.name}{item.name === "Highlights" && <span className="nav-count">{clips.length}</span>}</button>)}
         <div className="sidebar-bottom"><div className="admin-avatar"><CircleUserRound size={20}/></div><div className="admin-user"><strong>Administrator</strong><span>Owner workspace</span></div><button className="icon-button" onClick={onSignOut} title="Sign out"><LogOut size={16}/></button></div>
@@ -143,7 +143,7 @@ function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized,
           </>}
           {section === "Highlights" && <><div className="page-title-row"><div><span className="eyebrow">CONTENT LIBRARY</span><h1>Highlights</h1><p className="subheading">Edit, feature or remove clips.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>{loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-grid">{clips.map(c => <ClipCard key={c.id} clip={c} onOpen={() => {}} onLike={onLike} admin onDelete={onDelete} onEdit={onEdit} onFeature={onFeature}/>)}</div>}</>}
           {section === "Uploads" && <><div className="page-title-row"><div><span className="eyebrow">MEDIA STORAGE</span><h1>Uploads</h1><p className="subheading">Videos upload directly to your Supabase Storage bucket.</p></div><button className="primary-button" onClick={onUpload}><UploadCloud size={16}/> New upload</button></div><div className="setup-card"><div className="setup-icon"><HardDrive size={25}/></div><h2>Supabase Storage connected</h2><p>Videos are uploaded directly to your highlights bucket using resumable transfers. The bucket’s configured file-size limit and your Supabase plan apply.</p><div className="setup-steps"><span><Check size={15}/> Owner-only upload policies enabled</span><span><Check size={15}/> Video metadata saved in highlights</span><span><Check size={15}/> Published clips appear in the public gallery</span></div><span className="coming-soon">SUPABASE STORAGE</span></div></>}
-          {section === "Settings" && <><div className="page-title-row"><div><span className="eyebrow">PREFERENCES</span><h1>Settings</h1><p className="subheading">Your site configuration.</p></div></div><div className="settings-card"><div><strong>Site name</strong><p>Shown in the header and browser tab.</p></div><span>Clutch Archive</span></div><div className="settings-card"><div><strong>Admin access</strong><p>Supabase Auth and owner allowlist.</p></div><span>Connected</span></div><div className="settings-card"><div><strong>Video storage</strong><p>Owner-restricted uploads with public playback for published clips.</p></div><span>Supabase Storage</span></div></>}
+          {section === "Settings" && <><div className="page-title-row"><div><span className="eyebrow">PREFERENCES</span><h1>Settings</h1><p className="subheading">Your site configuration.</p></div></div><div className="settings-card"><div><strong>Site name</strong><p>Shown in the header and browser tab.</p></div><span>thefear14</span></div><div className="settings-card"><div><strong>Admin access</strong><p>Supabase Auth and owner allowlist.</p></div><span>Connected</span></div><div className="settings-card"><div><strong>Video storage</strong><p>Owner-restricted uploads with public playback for published clips.</p></div><span>Supabase Storage</span></div></>}
         </div>
       </main>
     </div>
@@ -571,7 +571,7 @@ function App() {
   return (
     <div className="site-shell">
       <header className="site-header">
-        <button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={19}/></span><span>CLUTCH<span className="brand-muted">ARCHIVE</span></span></button>
+        <button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={19}/></span><span>THE<span className="brand-muted">FEAR14</span></span></button>
         <nav className="main-nav"><a className={route === "highlights" ? "nav-active" : ""} href="#highlights">Highlights</a><a className={route === "about" ? "nav-active" : ""} href="#about">About</a></nav>
         <div className="header-actions"><span className="status-dot"/> <span className="online-label">PERSONAL FRAG MOVIE</span></div>
       </header>
