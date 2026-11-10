@@ -730,7 +730,7 @@ function App() {
             <span className="brand-mark about-mark"><Crosshair size={25}/></span>
             <span className="eyebrow">PLAYER PROFILE</span>
             <h1>Akbarali Nabiev</h1>
-            <p className="about-bio">UI/UX designer and frontend developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
+            <p className="about-bio">Ex - UI/UX designer and frontend developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
             <div className="profile-links" aria-label="Player profiles">
               <a href="https://steamcommunity.com/id/austinphilips" target="_blank" rel="noopener noreferrer">Steam profile <ExternalLink size={15}/></a>
               <a href="https://www.faceit.com/en/players/the_fear14" target="_blank" rel="noopener noreferrer">FACEIT profile <ExternalLink size={15}/></a>
