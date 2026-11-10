@@ -39,12 +39,14 @@ function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) 
         <div className="clip-title-line">
           <h3>{clip.title}</h3>
         </div>
-        <div className="tags">
-          {clip.tags.map((tag) => <span key={tag} className={`tag ${tag.toLowerCase().includes("clutch") ? "tag-cyan" : tag === "Ace" ? "tag-orange" : ""}`}>{tag.includes("clutch") && "● "}{tag}</span>)}
+        <div className="clip-engagement-row">
+          <div className="tags">
+            {clip.tags.map((tag) => <span key={tag} className={`tag ${tag.toLowerCase().includes("clutch") ? "tag-cyan" : tag === "Ace" ? "tag-orange" : ""}`}>{tag.includes("clutch") && "● "}{tag}</span>)}
+          </div>
+          <button className={`like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-label={`${clip.liked ? "Unlike" : "Like"} ${clip.title}; ${clip.likeCount ?? 0} likes`} aria-pressed={Boolean(clip.liked)}>
+            <Heart size={15} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0}</span>
+          </button>
         </div>
-        <button className={`like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-label={`${clip.liked ? "Unlike" : "Like"} ${clip.title}; ${clip.likeCount ?? 0} likes`} aria-pressed={Boolean(clip.liked)}>
-          <Heart size={15} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0}</span>
-        </button>
         <div className="clip-divider" />
         <div className="clip-meta">
           <span className="map-name"><span className="map-emblem">✦</span>{clip.map}</span>
