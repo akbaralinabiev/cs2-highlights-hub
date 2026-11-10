@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import * as tus from "tus-js-client";
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, toClip } from "./lib/supabase.js";
 import {
-  Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard,
+  Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, ExternalLink,
   Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart,
   LayoutDashboard, LogOut, Pencil, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
@@ -591,7 +591,20 @@ function App() {
           <div className="load-more"><span/> <span>YOU'VE REACHED THE END FOR NOW</span> <span/></div>
         </section>
       </main>
-      <footer id="about"><button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={17}/></span><span>CLUTCH<span className="brand-muted">ARCHIVE</span></span></button><span>MADE FOR THE LOVE OF THE GAME.</span></footer>
+      <footer id="about" className="site-about">
+        <div className="about-brand">
+          <span className="brand-mark"><Crosshair size={17}/></span>
+          <span>CLUTCH<span className="brand-muted">ARCHIVE</span></span>
+        </div>
+        <div className="about-copy">
+          <span className="eyebrow">ABOUT</span>
+          <p>My Counter-Strike highlights and player profiles.</p>
+        </div>
+        <div className="profile-links" aria-label="Player profiles">
+          <a href="https://steamcommunity.com/id/austinphilips" target="_blank" rel="noopener noreferrer">Steam <ExternalLink size={13}/></a>
+          <a href="https://www.faceit.com/en/players/the_fear14" target="_blank" rel="noopener noreferrer">FACEIT <ExternalLink size={13}/></a>
+        </div>
+      </footer>
       {modalClip && <Modal clip={clips.find((clip) => clip.id === modalClip.id) ?? modalClip} onClose={() => setModalClip(null)} onLike={toggleLike}/>}
     </div>
   );
