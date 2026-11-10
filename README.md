@@ -12,21 +12,21 @@ A React + Vite frontend prototype for a personal CS2 highlights website and admi
 
 ## Important: prototype vs production
 
-This is a UI starter with a Supabase-authenticated owner gate, but it is **not a complete production publishing system yet**.
+The app uses Supabase Auth, Postgres and Storage for owner-managed video publishing.
 
 - Visitor pages have no upload or dashboard controls. The owner route is `/#admin`.
-- The owner gate checks Supabase Auth and an explicit `admin_users` allowlist. The included SQL also applies row-level policies to highlight metadata and upload/delete operations in the `highlights` storage bucket.
-- The dashboard and upload form are still a frontend prototype: clips are in memory, selected videos are not uploaded, and database/storage policies are not used by the UI yet.
-- Added clips disappear when the page is refreshed.
-- The player is a placeholder.
-- Do not deploy as a complete private media-management tool until the Supabase setup below is complete and the UI is connected to database/storage.
+- The owner gate checks Supabase Auth and an explicit `admin_users` allowlist.
+- Highlights and video files persist in the `highlights` table and Storage bucket. Uploads use resumable transfers directly from the browser.
+- New uploads are published to the public gallery. The bucket is public for playback, while upload/update/delete operations are restricted by RLS to allowlisted owners.
+- Video upload size limits are controlled by your Supabase project plan and Storage settings; check those limits before uploading large files.
+- Run the SQL below before using database-backed gallery or uploads. Do not deploy without applying it.
 
 ## Configure owner authentication
 
 1. Create a Supabase project and copy its Project URL and anon/public key.
 2. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in the frontend.
 3. In Supabase Auth, disable public sign-ups and create/invite your owner account.
-4. Run [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor.
+4. Run the complete [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor. Re-run it if the app previously reported that `admin_users` was missing; it is safe to re-run.
 5. Add your account to the owner allowlist in the SQL Editor:
 
    ```sql
@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite to view the public gallery. Once Supabase is configured, visit `/#admin` to sign in as the allowlisted owner.
+Open the local URL printed by Vite to view the public gallery. Visit `/#admin` to sign in as the allowlisted owner, then use **Add highlight** to upload a video and its metadata. New uploads appear in the public gallery. If your Supabase Storage bucket rejects a large video, increase the project/bucket upload-size limit or use a plan that supports that size.
 
 Build for deployment:
 
@@ -62,17 +62,16 @@ npm run preview
 - **Frontend/hosting:** Vercel (or Netlify)
 - **Database and auth:** Supabase Postgres + Supabase Auth
 - **Video files:** Supabase Storage (or another object-storage provider)
-- **Uploads:** browser uploads directly to storage with a short-lived signed URL; never send a 200 MB video through a Vercel/Netlify function
+- **Uploads:** browser uploads directly with the signed-in owner session and resumable transfers; never send large videos through a Vercel/Netlify function
 - **Metadata:** save title, map, round, score, tags, video object key, thumbnail object key, visibility, and timestamps in the database
-- **Admin security:** real login + server-side authorization on every write operation. Hiding a dashboard link is not access control.
+- **Admin security:** Supabase Auth plus RLS authorization on every database and storage write. Hiding a dashboard link is not access control.
 
 ### Storage note
 
-Supabase Storage's Free plan currently has a 50 MB maximum file size, so it does not meet a 200 MB-per-video requirement on Free. Check current plan limits before choosing a storage provider. Cloudflare R2 supports large objects and advertises no egress bandwidth fees, but storage and request charges still apply.
+Check the current Supabase plan and bucket upload-size limits before uploading large clips. Resumable uploads improve reliability but do not override the project’s configured maximum file size.
 
 ## Next production steps
 
-1. Connect the owner dashboard to the `highlights` table and the `highlights` storage bucket.
-2. Upload directly from the browser to storage, with the included row-level policies restricting writes to the allowlisted owner.
-3. Save metadata in the database and use public playback URLs or signed URLs according to your privacy preference.
-4. Add thumbnails/transcoding later if desired.
+1. Configure production environment variables and redirect URLs in Supabase Auth.
+2. Set Storage size limits based on your video requirements.
+3. Add thumbnails/transcoding later if desired.

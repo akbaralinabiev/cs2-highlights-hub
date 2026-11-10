@@ -78,7 +78,7 @@ create policy "Only owners can delete highlights"
 
 insert into storage.buckets (id, name, public)
 values ('highlights', 'highlights', true)
-on conflict (id) do nothing;
+on conflict (id) do update set public = true;
 
 drop policy if exists "Only owners can upload highlight videos" on storage.objects;
 create policy "Only owners can upload highlight videos"
