@@ -24,7 +24,7 @@ This is a UI starter with a Supabase-authenticated owner gate, but it is **not a
 ## Configure owner authentication
 
 1. Create a Supabase project and copy its Project URL and anon/public key.
-2. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Do not put a service-role key in the frontend.
+2. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in the frontend.
 3. In Supabase Auth, disable public sign-ups and create/invite your owner account.
 4. Run [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor.
 5. Add your account to the owner allowlist in the SQL Editor:
