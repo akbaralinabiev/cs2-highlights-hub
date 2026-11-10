@@ -174,7 +174,7 @@ function Modal({ clip, onClose, onLike }) {
 function HighlightFormModal({ clip, onClose, onSave }) {
   const [title, setTitle] = useState(clip?.title ?? "");
   const [map, setMap] = useState(clip?.map ?? "Mirage");
-  const [tag, setTag] = useState(clip?.tags?.[0] ?? "3K");
+  const [tags, setTags] = useState(() => clip?.tags?.length ? clip.tags : ["3K"]);
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -182,12 +182,13 @@ function HighlightFormModal({ clip, onClose, onSave }) {
   const submit = async (e) => {
     e.preventDefault();
     if (!title.trim()) return setError("Add a title for this highlight.");
+    if (tags.length === 0) return setError("Choose at least one highlight type.");
     if (!clip && !file) return setError("Choose a video file to upload.");
     if (file && videoSizeError(file)) return setError(videoSizeError(file));
     setBusy(true);
     setError("");
     try {
-      await onSave({ title: title.trim(), map, tags: [tag], file, onProgress: setProgress });
+      await onSave({ title: title.trim(), map, tags, file, onProgress: setProgress });
       onClose();
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : String(uploadError));
@@ -206,10 +207,8 @@ function HighlightFormModal({ clip, onClose, onSave }) {
             <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={e => { const selectedFile = e.target.files?.[0] || null; setFile(selectedFile); setError(selectedFile ? videoSizeError(selectedFile) : ""); }} />
           </label>
           <div className="field"><label htmlFor="title">Highlight title</label><input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. 1v3 clutch on Mirage" /></div>
-          <div className="form-grid">
-            <div className="field"><label htmlFor="map">Map</label><select id="map" value={map} onChange={e => setMap(e.target.value)}>{maps.slice(1).map(m => <option key={m}>{m}</option>)}</select></div>
-            <div className="field"><label htmlFor="tag">Highlight type</label><select id="tag" value={tag} onChange={e => setTag(e.target.value)}>{["3K", "4K", "Ace", "1v2 clutch", "1v3 clutch", "Clutch", "Entry", "Retake"].map(t => <option key={t}>{t}</option>)}</select></div>
-          </div>
+          <div className="field"><label htmlFor="map">Map</label><select id="map" value={map} onChange={e => setMap(e.target.value)}>{maps.slice(1).map(m => <option key={m}>{m}</option>)}</select></div>
+          <fieldset className="field tag-picker"><legend>Highlight types</legend><div className="tag-picker-options">{["3K", "4K", "Ace", "1v2 clutch", "1v3 clutch", "Clutch", "Entry", "Retake"].map(type => <label key={type} className={`tag-choice ${tags.includes(type) ? "selected" : ""}`}><input type="checkbox" checked={tags.includes(type)} disabled={busy} onChange={() => setTags(current => current.includes(type) ? current.filter(item => item !== type) : [...current, type])}/><span>{type}</span></label>)}</div></fieldset>
           {busy && <div className="upload-progress"><span>Uploading video… {progress}%</span><progress max="100" value={progress}/></div>}
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="demo-warning"><ShieldCheck size={16}/><span>{clip ? "Saving changes keeps this highlight’s likes." : "Video and highlight details will be saved in Supabase and published to the public gallery."}</span></div>

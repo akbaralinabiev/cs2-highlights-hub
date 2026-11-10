@@ -17,8 +17,8 @@ A responsive Counter-Strike 2 highlights site built with React, Vite, and Supaba
 
 - Owner sign-in at `/#admin` via Supabase Auth and the `admin_users` allowlist
 - Upload videos directly to Supabase Storage with resumable transfer and progress
-- Save title, map, highlight type, publication state, and video path in Supabase Postgres
-- Edit highlight title, map, and type, or replace the video
+- Save title, map, one or more highlight types, publication state, and video path in Supabase Postgres
+- Edit highlight title, map, and types, or replace the video
 - Edits preserve likes by updating the existing highlight record
 - Feature or delete highlights
 - Upload, edit, and delete operations are protected by Supabase row-level security (RLS)
