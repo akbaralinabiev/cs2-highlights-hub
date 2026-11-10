@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 import * as tus from "tus-js-client";
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, toClip } from "./lib/supabase.js";
 import {
-  Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, ExternalLink,
-  Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart,
+  Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, Code2, ExternalLink,
+  Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart, MapPin,
   LayoutDashboard, LogOut, Pencil, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
 } from "lucide-react";
@@ -726,18 +726,46 @@ function App() {
         </main>
       ) : (
         <main className="about-page" id="about">
-          <section className="about-content">
-            <span className="brand-mark about-mark"><Crosshair size={25}/></span>
-            <span className="eyebrow">PLAYER PROFILE</span>
-            <h1>Akbarali Nabiev</h1>
-            <p className="about-bio">Ex - UI/UX designer and frontend developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
-            <div className="profile-links" aria-label="Player profiles">
-              <a href="https://steamcommunity.com/id/austinphilips" target="_blank" rel="noopener noreferrer">Steam profile <ExternalLink size={15}/></a>
-              <a href="https://www.faceit.com/en/players/the_fear14" target="_blank" rel="noopener noreferrer">FACEIT profile <ExternalLink size={15}/></a>
-              <a href="https://github.com/akbaralinabiev" target="_blank" rel="noopener noreferrer">GitHub profile <ExternalLink size={15}/></a>
-              <a href="https://akbaralinabiev.vercel.app/" target="_blank" rel="noopener noreferrer">Portfolio <ExternalLink size={15}/></a>
-            </div>
-          </section>
+          <div className="about-layout">
+            <section className="about-hero">
+              <div className="about-intro">
+                <span className="eyebrow">PLAYER PROFILE <span className="about-index">/ 01</span></span>
+                <h1>Akbarali<br/><em>Nabiev.</em></h1>
+                <p className="about-bio">Ex - UI/UX designer and frontend developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
+                <span className="about-location"><MapPin size={15}/> Warsaw, Poland</span>
+              </div>
+              <div className="about-visual" aria-hidden="true">
+                <div className="about-visual-grid"/>
+                <div className="about-scope"><Crosshair size={148} strokeWidth={0.65}/></div>
+                <span className="about-visual-label">THE FEAR14 <b>·</b> ONLINE</span>
+                <span className="about-visual-corner">CS2 / 2026</span>
+              </div>
+            </section>
+
+            <section className="about-profiles" aria-label="Profiles">
+              <article className="about-profile">
+                <span className="about-profile-icon"><Code2 size={18}/></span>
+                <span className="eyebrow">ON THE WEB</span>
+                <h2>Design &amp; build</h2>
+                <p>Interfaces, frontend, and projects I’ve been working on.</p>
+                <div className="about-profile-links">
+                  <a href="https://github.com/akbaralinabiev" target="_blank" rel="noopener noreferrer">GitHub profile <ExternalLink size={14}/></a>
+                  <a href="https://akbaralinabiev.vercel.app/" target="_blank" rel="noopener noreferrer">Portfolio <ExternalLink size={14}/></a>
+                </div>
+              </article>
+              <article className="about-profile">
+                <span className="about-profile-icon"><Gamepad2 size={18}/></span>
+                <span className="eyebrow">IN-GAME</span>
+                <h2>Counter-Strike 2</h2>
+                <p>Competitive matches, good teammates, and rounds worth replaying.</p>
+                <div className="about-profile-links">
+                  <a href="https://steamcommunity.com/id/austinphilips" target="_blank" rel="noopener noreferrer">Steam profile <ExternalLink size={14}/></a>
+                  <a href="https://www.faceit.com/en/players/the_fear14" target="_blank" rel="noopener noreferrer">FACEIT profile <ExternalLink size={14}/></a>
+                </div>
+              </article>
+            </section>
+
+          </div>
         </main>
       )}
       {modalClip && <Modal clip={clips.find((clip) => clip.id === modalClip.id) ?? modalClip} onClose={() => setModalClip(null)} onLike={toggleLike}/>}
