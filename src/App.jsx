@@ -207,7 +207,7 @@ function HighlightFormModal({ clip, onClose, onSave }) {
             <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={e => { const selectedFile = e.target.files?.[0] || null; setFile(selectedFile); setError(selectedFile ? videoSizeError(selectedFile) : ""); }} />
           </label>
           <div className="field"><label htmlFor="title">Highlight title</label><input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. 1v3 clutch on Mirage" /></div>
-          <div className="field"><label htmlFor="map">Map</label><select id="map" value={map} onChange={e => setMap(e.target.value)}>{maps.slice(1).map(m => <option key={m}>{m}</option>)}</select></div>
+          <div className="field"><label>Map</label><div className="filter-control form-map-filter"><Filter size={15}/><FilterDropdown label="Map" value={map} options={maps.slice(1)} onChange={setMap}/></div></div>
           <fieldset className="field tag-picker"><legend>Highlight types</legend><div className="tag-picker-options">{["3K", "4K", "Ace", "1v2 clutch", "1v3 clutch", "Clutch", "Entry", "Retake"].map(type => <label key={type} className={`tag-choice ${tags.includes(type) ? "selected" : ""}`}><input type="checkbox" checked={tags.includes(type)} disabled={busy} onChange={() => setTags(current => current.includes(type) ? current.filter(item => item !== type) : [...current, type])}/><span>{type}</span></label>)}</div></fieldset>
           {busy && <div className="upload-progress"><span>Uploading video… {progress}%</span><progress max="100" value={progress}/></div>}
           {error && <p className="form-error" role="alert">{error}</p>}
