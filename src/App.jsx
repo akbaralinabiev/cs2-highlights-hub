@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import * as tus from "tus-js-client";
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, toClip } from "./lib/supabase.js";
 import {
@@ -16,6 +16,97 @@ const VIDEO_SIZE_ERROR = `Supabase's current Free plan limit is 50 MB per file. 
 function videoSizeError(file) {
   if (file.size <= MAX_VIDEO_SIZE_BYTES) return "";
   return `This video is larger than ${MAX_VIDEO_SIZE_LABEL}. ${VIDEO_SIZE_ERROR}`;
+}
+
+function FilterDropdown({ label, value, options, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(Math.max(0, options.indexOf(value)));
+  const id = useId();
+  const rootRef = useRef(null);
+  const triggerRef = useRef(null);
+  const optionRefs = useRef([]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) optionRefs.current[activeIndex]?.focus();
+  }, [activeIndex, open]);
+
+  const choose = (option) => {
+    onChange(option);
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+      triggerRef.current?.focus();
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!open) {
+        setActiveIndex(Math.max(0, options.indexOf(value)));
+        setOpen(true);
+      } else {
+        setActiveIndex((index) => (index + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length);
+      }
+    } else if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      setActiveIndex(event.key === "Home" ? 0 : options.length - 1);
+    } else if ((event.key === "Enter" || event.key === " ") && open) {
+      event.preventDefault();
+      choose(options[activeIndex]);
+    }
+  };
+
+  return (
+    <div className="filter-dropdown" ref={rootRef} onKeyDown={handleKeyDown}>
+      <button
+        ref={triggerRef}
+        className="dropdown-trigger"
+        type="button"
+        role="combobox"
+        aria-label={label}
+        aria-controls={id}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => {
+          setActiveIndex(Math.max(0, options.indexOf(value)));
+          setOpen((isOpen) => !isOpen);
+        }}
+      >
+        <span>{value}</span>
+        <ChevronDown size={14} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="dropdown-menu" id={id} role="listbox" aria-label={label}>
+          {options.map((option, index) => (
+            <button
+              key={option}
+              ref={(element) => { optionRefs.current[index] = element; }}
+              className={`dropdown-option ${option === value ? "selected" : ""}`}
+              type="button"
+              role="option"
+              aria-selected={option === value}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => choose(option)}
+            >
+              {option}
+              {option === value && <Check size={14} aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) {
@@ -611,9 +702,9 @@ function App() {
           {dataLoading && <p className="section-description" role="status">Loading highlights…</p>}
           <div className="filters">
             <div className="search-box"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search highlights..." /></div>
-            <div className="filter-control"><Filter size={15}/><select value={mapFilter} onChange={e => setMapFilter(e.target.value)} aria-label="Filter by map">{maps.map(m => <option key={m}>{m}</option>)}</select><ChevronDown size={14}/></div>
-            <div className="filter-control"><Grid2X2 size={15}/><select value={tagFilter} onChange={e => setTagFilter(e.target.value)} aria-label="Filter by highlight type">{["All types", "3K", "4K", "Ace", "clutch", "Retake", "Entry"].map(m => <option key={m}>{m}</option>)}</select><ChevronDown size={14}/></div>
-            <div className="sort-control"><span>Sort</span><select value={sort} onChange={e => setSort(e.target.value)}><option>Newest first</option><option>Oldest first</option></select></div>
+            <div className="filter-control"><Filter size={15}/><FilterDropdown label="Filter by map" value={mapFilter} options={maps} onChange={setMapFilter}/></div>
+            <div className="filter-control"><Grid2X2 size={15}/><FilterDropdown label="Filter by highlight type" value={tagFilter} options={["All types", "3K", "4K", "Ace", "clutch", "Retake", "Entry"]} onChange={setTagFilter}/></div>
+            <div className="sort-control"><span>Sort</span><FilterDropdown label="Sort highlights" value={sort} options={["Newest first", "Oldest first"]} onChange={setSort}/></div>
           </div>
           <div className="clip-grid">{filtered.map(c => <ClipCard key={c.id} clip={c} onOpen={setModalClip} onLike={toggleLike}/>)}</div>
           {!dataLoading && !dataError && filtered.length === 0 && <div className="empty-state"><Search size={28}/><h3>No highlights found</h3><p>Try a different search or filter.</p><button className="secondary-button" onClick={() => {setSearch("");setMapFilter("All maps");setTagFilter("All types");}}>Clear filters</button></div>}
