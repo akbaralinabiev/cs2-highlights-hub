@@ -1,80 +1,105 @@
 # Clutch Archive — CS2 Highlights Hub
 
-A React + Vite frontend prototype for a personal CS2 highlights website and admin dashboard.
+A responsive Counter-Strike 2 highlights site built with React, Vite, and Supabase. Visitors can browse and like published videos; the allowlisted owner can upload and manage highlights.
 
-## Current prototype features
+## Features
 
-- Dark responsive highlights gallery inspired by the supplied reference image
-- Search, map/type filters, sort order
-- Clip detail modal
-- Public highlights gallery with no visitor-facing upload or dashboard controls
-- Public pages: `/#highlights` for the full landing page and gallery, and `/#about` for Steam/FACEIT profile links
-- Owner sign-in via Supabase Auth at `/#admin` (requires project configuration and an allowlisted account)
+### Public site
 
-## Important: prototype vs production
+- Full landing page and highlights gallery at `/#highlights` (also the default route)
+- Separate About page at `/#about`, with Steam and FACEIT profile links
+- Search, map and highlight-type filters, and newest/oldest sorting
+- Video playback, highlight details, and persistent like counts
+- Responsive layout for phone, tablet, and desktop screen sizes
+- No visitor-facing dashboard or upload controls
 
-The app uses Supabase Auth, Postgres and Storage for owner-managed video publishing.
+### Owner dashboard
 
-- Visitor pages have no upload or dashboard controls. The owner route is `/#admin`.
-- The owner gate checks Supabase Auth and an explicit `admin_users` allowlist.
-- Highlights and video files persist in the `highlights` table and Storage bucket. Uploads use resumable transfers directly from the browser.
-- Admins can edit a highlight's title, map, type, or replace its video. Edits update the same database row, preserving visitor likes.
-- Visitors can like/unlike published videos; counts are stored in Supabase and are limited to one like per browser profile. Because visitors do not sign in, clearing browser storage or changing browsers can create another like; this is a lightweight engagement feature, not fraud-resistant voting.
-- New uploads are published to the public gallery. The bucket is public for playback, while upload/update/delete operations are restricted by RLS to allowlisted owners.
-- Video upload size limits are controlled by your Supabase project plan and Storage settings; check those limits before uploading large files.
-- Run the SQL below before using database-backed gallery or uploads. Do not deploy without applying it.
+- Owner sign-in at `/#admin` via Supabase Auth and the `admin_users` allowlist
+- Upload videos directly to Supabase Storage with resumable transfer and progress
+- Save title, map, highlight type, publication state, and video path in Supabase Postgres
+- Edit highlight title, map, and type, or replace the video
+- Edits preserve likes by updating the existing highlight record
+- Feature or delete highlights
+- Upload, edit, and delete operations are protected by Supabase row-level security (RLS)
 
-## Configure owner authentication
+## Stack
 
-1. Create a Supabase project and copy its Project URL and anon/public key.
-2. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in the frontend.
-3. In Supabase Auth, disable public sign-ups and create/invite your owner account.
-4. Run the complete [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor. Re-run it if the app previously reported that `admin_users` was missing; it is safe to re-run. It also removes old `round` and `score` columns and creates the visitor-like schema and RPCs.
-5. Add your account to the owner allowlist in the SQL Editor:
+- React 18
+- Vite 6
+- Supabase Auth, Postgres, and Storage
+- `tus-js-client` for resumable video uploads
+
+## Supabase setup
+
+1. Create a Supabase project.
+2. Copy `.env.example` to `.env.local` and set your project URL and publishable key:
+
+   ```env
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+   ```
+
+   Never put a Supabase secret or service-role key in frontend environment variables or commit them.
+
+3. In Supabase Auth, disable public sign-ups and create or invite your owner account.
+4. Run the complete [`supabase/policies.sql`](./supabase/policies.sql) file in the Supabase SQL Editor. It creates the owner allowlist, highlights and likes tables, Storage bucket, RLS policies, and like RPC functions. It also removes the old `round` and `score` columns from an existing highlights table.
+5. Add your owner account to the allowlist. Replace the email with the exact email used for your Supabase Auth account:
 
    ```sql
    insert into public.admin_users (user_id)
-   select id from auth.users where email = 'your-owner-email@example.com'
-   on conflict do nothing;
+   select id
+   from auth.users
+   where lower(email) = lower('your-owner-email@example.com')
+   on conflict (user_id) do nothing;
    ```
 
-6. Add the same two public environment variables to your hosting provider and redeploy.
+6. Confirm the allowlist entry:
 
-The login is password-based and the `admin_users` row—not a hidden `#admin` URL—determines access. Keep public sign-ups disabled and never expose a Supabase service-role key in Vite environment variables.
+   ```sql
+   select u.email, (a.user_id is not null) as owner_allowlisted
+   from auth.users as u
+   left join public.admin_users as a on a.user_id = u.id
+   where lower(u.email) = lower('your-owner-email@example.com');
+   ```
+
+   `owner_allowlisted` should be `true`.
+
+The hidden `#admin` route is not the security mechanism: authorization is checked against Supabase Auth and the owner allowlist, while database and Storage writes are enforced by RLS. Re-run the setup SQL after pulling changes that update its schema or policies.
 
 ## Run locally
 
-Requires Node.js 20+ recommended.
+Requires Node.js 20 or newer.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite to view the public gallery. Visit `/#admin` to sign in as the allowlisted owner, then use **Add highlight** to upload a video and its metadata. New uploads appear in the public gallery. If your Supabase Storage bucket rejects a large video, increase the project/bucket upload-size limit or use a plan that supports that size.
+Open the local URL printed by Vite. Public routes:
 
-Build for deployment:
+- `/#highlights` — landing page and video gallery
+- `/#about` — Steam and FACEIT profile links
+
+Owner route:
+
+- `/#admin` — sign in, then manage highlights
+
+## Upload and storage notes
+
+- Uploads go directly from the browser to the `highlights` Supabase Storage bucket using the signed-in owner session.
+- New uploads are published to the public gallery.
+- The bucket is public for playback; its write operations are restricted to allowlisted owners by RLS.
+- Check the current Supabase plan and bucket upload-size limit before uploading large videos. Resumable uploads improve reliability but do not override those limits.
+- Visitor likes are stored in Supabase and are limited to one per browser profile. Because visitors do not sign in, clearing browser storage or changing browsers can allow another like; this is lightweight engagement tracking, not fraud-resistant voting.
+
+## Build and preview
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Suggested production architecture
+## Deployment
 
-- **Frontend/hosting:** Vercel (or Netlify)
-- **Database and auth:** Supabase Postgres + Supabase Auth
-- **Video files:** Supabase Storage (or another object-storage provider)
-- **Uploads:** browser uploads directly with the signed-in owner session and resumable transfers; never send large videos through a Vercel/Netlify function
-- **Metadata:** save title, map, highlight type, video object key, visibility, and timestamps in the database
-- **Admin security:** Supabase Auth plus RLS authorization on every database and storage write. Hiding a dashboard link is not access control.
-
-### Storage note
-
-Check the current Supabase plan and bucket upload-size limits before uploading large clips. Resumable uploads improve reliability but do not override the project’s configured maximum file size.
-
-## Next production steps
-
-1. Configure production environment variables and redirect URLs in Supabase Auth.
-2. Set Storage size limits based on your video requirements.
-3. Add thumbnails/transcoding later if desired.
+Deploy the Vite app to a static host such as Vercel or Netlify. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to the host's environment settings, configure the production site URL in Supabase Auth, and redeploy. Never expose a Supabase secret or service-role key in the browser.
