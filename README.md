@@ -17,6 +17,7 @@ The app uses Supabase Auth, Postgres and Storage for owner-managed video publish
 - Visitor pages have no upload or dashboard controls. The owner route is `/#admin`.
 - The owner gate checks Supabase Auth and an explicit `admin_users` allowlist.
 - Highlights and video files persist in the `highlights` table and Storage bucket. Uploads use resumable transfers directly from the browser.
+- Visitors can like/unlike published videos; counts are stored in Supabase and are limited to one like per browser profile. Because visitors do not sign in, clearing browser storage or changing browsers can create another like; this is a lightweight engagement feature, not fraud-resistant voting.
 - New uploads are published to the public gallery. The bucket is public for playback, while upload/update/delete operations are restricted by RLS to allowlisted owners.
 - Video upload size limits are controlled by your Supabase project plan and Storage settings; check those limits before uploading large files.
 - Run the SQL below before using database-backed gallery or uploads. Do not deploy without applying it.
@@ -26,7 +27,7 @@ The app uses Supabase Auth, Postgres and Storage for owner-managed video publish
 1. Create a Supabase project and copy its Project URL and anon/public key.
 2. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in the frontend.
 3. In Supabase Auth, disable public sign-ups and create/invite your owner account.
-4. Run the complete [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor. Re-run it if the app previously reported that `admin_users` was missing; it is safe to re-run. It also removes the old `round` and `score` columns from an existing highlights table.
+4. Run the complete [`supabase/policies.sql`](./supabase/policies.sql) in the Supabase SQL Editor. Re-run it if the app previously reported that `admin_users` was missing; it is safe to re-run. It also removes old `round` and `score` columns and creates the visitor-like schema and RPCs.
 5. Add your account to the owner allowlist in the SQL Editor:
 
    ```sql

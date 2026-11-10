@@ -3,29 +3,14 @@ import * as tus from "tus-js-client";
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, toClip } from "./lib/supabase.js";
 import {
   Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard,
-  Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive,
+  Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart,
   LayoutDashboard, LogOut, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
 } from "lucide-react";
 
-const initialClips = [
-  { id: 1, title: "Triple threat", map: "Mirage", date: "8 Nov 2026", tags: ["3K"], featured: true },
-  { id: 2, title: "Carried the round", map: "Mirage", date: "8 Nov 2026", tags: ["3K"] },
-  { id: 3, title: "Clutched a 1v2 situation", map: "Mirage", date: "8 Nov 2026", tags: ["1v2 clutch"] },
-  { id: 4, title: "Clutched a 1v2 situation", map: "Mirage", date: "8 Nov 2026", tags: ["1v2 clutch"] },
-  { id: 5, title: "Triple kill", map: "Mirage", date: "8 Nov 2026", tags: ["3K", "1v3 clutch"] },
-  { id: 6, title: "Three frags, one round", map: "Cache", date: "8 Nov 2026", tags: ["3K"] },
-  { id: 7, title: "Triple threat", map: "Cache", date: "8 Nov 2026", tags: ["3K"] },
-  { id: 8, title: "Triple kill", map: "Nuke", date: "8 Nov 2026", tags: ["3K"] },
-  { id: 9, title: "Clean retake", map: "Ancient", date: "7 Nov 2026", tags: ["Retake"] },
-  { id: 10, title: "Last-second defuse", map: "Inferno", date: "6 Nov 2026", tags: ["Clutch"] },
-  { id: 11, title: "No time to reload", map: "Dust II", date: "5 Nov 2026", tags: ["Ace"] },
-  { id: 12, title: "The opening pick", map: "Anubis", date: "4 Nov 2026", tags: ["Entry"] }
-];
-
 const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis"];
 
-function ClipCard({ clip, onOpen, admin, onDelete, onFeature }) {
+function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature }) {
   return (
     <article className="clip-card">
       <button className="video-preview" onClick={() => onOpen(clip)} aria-label={`Open ${clip.title}`}>
@@ -48,6 +33,9 @@ function ClipCard({ clip, onOpen, admin, onDelete, onFeature }) {
         <div className="tags">
           {clip.tags.map((tag) => <span key={tag} className={`tag ${tag.toLowerCase().includes("clutch") ? "tag-cyan" : tag === "Ace" ? "tag-orange" : ""}`}>{tag.includes("clutch") && "● "}{tag}</span>)}
         </div>
+        <button className={`like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-label={`${clip.liked ? "Unlike" : "Like"} ${clip.title}; ${clip.likeCount ?? 0} likes`} aria-pressed={Boolean(clip.liked)}>
+          <Heart size={15} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0}</span>
+        </button>
         <div className="clip-divider" />
         <div className="clip-meta">
           <span className="map-name"><span className="map-emblem">✦</span>{clip.map}</span>
@@ -58,7 +46,7 @@ function ClipCard({ clip, onOpen, admin, onDelete, onFeature }) {
   );
 }
 
-function Modal({ clip, onClose }) {
+function Modal({ clip, onClose, onLike }) {
   if (!clip) return null;
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -71,6 +59,9 @@ function Modal({ clip, onClose }) {
           <div><span className="eyebrow">{clip.map}</span><h2>{clip.title}</h2></div>
         </div>
         <div className="tags">{clip.tags.map(t => <span key={t} className="tag">{t}</span>)}</div>
+        <button className={`like-button modal-like-button ${clip.liked ? "liked" : ""}`} onClick={() => onLike(clip.id)} disabled={clip.likePending} aria-pressed={Boolean(clip.liked)}>
+          <Heart size={16} fill={clip.liked ? "currentColor" : "none"}/><span>{clip.likeCount ?? 0} likes</span>
+        </button>
       </div>
     </div>
   );
@@ -124,7 +115,7 @@ function UploadModal({ onClose, onAdd }) {
   );
 }
 
-function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized, onUpload, onDelete, onFeature }) {
+function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized, onUpload, onDelete, onFeature, onLike }) {
   const [section, setSection] = useState("Overview");
   useEffect(() => { void onAuthorized(); }, []);
   const nav = [
@@ -149,7 +140,7 @@ function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized,
             <div className="section-heading"><div><h2>Recent highlights</h2><p>Manage your latest clips</p></div><button className="text-button" onClick={() => setSection("Highlights")}>View all <ArrowLeft className="arrow-right" size={14}/></button></div>
             {loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-list">{clips.slice(0, 5).map(c => <div className="admin-list-row" key={c.id}><div className="mini-video"><Video size={17}/></div><div className="list-title"><strong>{c.title}</strong><span>{c.map}</span></div><span className="draft-pill">{c.is_published ? "Published" : "Draft"}</span><button className="icon-button danger-quiet" onClick={() => onDelete(c.id)} title="Delete highlight"><Trash2 size={15}/></button></div>)}</div>}
           </>}
-          {section === "Highlights" && <><div className="page-title-row"><div><span className="eyebrow">CONTENT LIBRARY</span><h1>Highlights</h1><p className="subheading">Edit, feature or remove clips.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>{loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-grid">{clips.map(c => <ClipCard key={c.id} clip={c} onOpen={() => {}} admin onDelete={onDelete} onFeature={onFeature}/>)}</div>}</>}
+          {section === "Highlights" && <><div className="page-title-row"><div><span className="eyebrow">CONTENT LIBRARY</span><h1>Highlights</h1><p className="subheading">Edit, feature or remove clips.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>{loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-grid">{clips.map(c => <ClipCard key={c.id} clip={c} onOpen={() => {}} onLike={onLike} admin onDelete={onDelete} onFeature={onFeature}/>)}</div>}</>}
           {section === "Uploads" && <><div className="page-title-row"><div><span className="eyebrow">MEDIA STORAGE</span><h1>Uploads</h1><p className="subheading">Videos upload directly to your Supabase Storage bucket.</p></div><button className="primary-button" onClick={onUpload}><UploadCloud size={16}/> New upload</button></div><div className="setup-card"><div className="setup-icon"><HardDrive size={25}/></div><h2>Supabase Storage connected</h2><p>Videos are uploaded directly to your highlights bucket using resumable transfers. The bucket’s configured file-size limit and your Supabase plan apply.</p><div className="setup-steps"><span><Check size={15}/> Owner-only upload policies enabled</span><span><Check size={15}/> Video metadata saved in highlights</span><span><Check size={15}/> Published clips appear in the public gallery</span></div><span className="coming-soon">SUPABASE STORAGE</span></div></>}
           {section === "Settings" && <><div className="page-title-row"><div><span className="eyebrow">PREFERENCES</span><h1>Settings</h1><p className="subheading">Your site configuration.</p></div></div><div className="settings-card"><div><strong>Site name</strong><p>Shown in the header and browser tab.</p></div><span>Clutch Archive</span></div><div className="settings-card"><div><strong>Admin access</strong><p>Supabase Auth and owner allowlist.</p></div><span>Connected</span></div><div className="settings-card"><div><strong>Video storage</strong><p>Owner-restricted uploads with public playback for published clips.</p></div><span>Supabase Storage</span></div></>}
         </div>
@@ -355,7 +346,7 @@ function uploadVideo(file, objectPath, accessToken, onProgress) {
 }
 
 function App() {
-  const [clips, setClips] = useState(isSupabaseConfigured ? [] : initialClips);
+  const [clips, setClips] = useState([]);
   const [dataLoading, setDataLoading] = useState(isSupabaseConfigured);
   const [dataError, setDataError] = useState("");
   const [admin, setAdmin] = useState(window.location.hash === "#admin");
@@ -366,6 +357,7 @@ function App() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [sort, setSort] = useState("Newest first");
   const loadRequest = useRef(0);
+  const [visitorId, setVisitorId] = useState(null);
 
   const loadClips = useCallback(async (includeUnpublished = false) => {
     if (!supabase) return;
@@ -378,15 +370,39 @@ function App() {
       const { data, error } = await query;
       if (error) throw error;
       if (requestId !== loadRequest.current) return;
-      setClips(data.map(toClip));
+      const loadedClips = data.map(toClip);
+      if (visitorId) {
+        const { data: stats, error: statsError } = await supabase.rpc("get_highlight_like_stats", { p_visitor_id: visitorId });
+        if (statsError) throw statsError;
+        const statsById = new Map(stats.map((item) => [item.highlight_id, item]));
+        for (const clip of loadedClips) {
+          const statsForClip = statsById.get(clip.id);
+          clip.likeCount = Number(statsForClip?.like_count ?? 0);
+          clip.liked = Boolean(statsForClip?.liked);
+        }
+      }
+      if (requestId !== loadRequest.current) return;
+      setClips(loadedClips);
     } catch (loadError) {
       if (requestId !== loadRequest.current) return;
       setDataError(`Could not load highlights: ${loadError instanceof Error ? loadError.message : String(loadError)}`);
     } finally {
       if (requestId === loadRequest.current) setDataLoading(false);
     }
-  }, []);
+  }, [visitorId]);
   const loadAdminClips = useCallback(() => loadClips(true), [loadClips]);
+
+  useEffect(() => {
+    try {
+      const storageKey = "clutch-archive-visitor-id";
+      const existingId = window.localStorage.getItem(storageKey);
+      const id = existingId || crypto.randomUUID();
+      if (!existingId) window.localStorage.setItem(storageKey, id);
+      setVisitorId(id);
+    } catch (error) {
+      setDataError(`Likes require browser storage: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, []);
 
   useEffect(() => {
     const syncAdminRoute = () => {
@@ -398,7 +414,7 @@ function App() {
     return () => {
       window.removeEventListener("hashchange", syncAdminRoute);
     };
-  }, []);
+  }, [loadClips]);
   const filtered = useMemo(() => clips.filter(c =>
     (mapFilter === "All maps" || c.map === mapFilter) &&
     (tagFilter === "All types" || c.tags.some(t => t.toLowerCase().includes(tagFilter.toLowerCase()))) &&
@@ -470,8 +486,32 @@ function App() {
     const updated = toClip(data);
     setClips((previous) => previous.map((item) => item.id === id ? updated : item));
   };
+  const toggleLike = async (id) => {
+    if (!supabase || !visitorId) {
+      setDataError("Likes are unavailable because browser storage or Supabase is not configured.");
+      return;
+    }
+    setClips((previous) => previous.map((clip) => clip.id === id ? { ...clip, likePending: true } : clip));
+    try {
+      const { data, error } = await supabase.rpc("toggle_highlight_like", {
+        p_highlight_id: id,
+        p_visitor_id: visitorId,
+      });
+      if (error) throw error;
+      setClips((previous) => previous.map((clip) => clip.id === id ? {
+        ...clip,
+        likeCount: Number(data[0].like_count),
+        liked: data[0].liked,
+        likePending: false,
+      } : clip));
+      setDataError("");
+    } catch (likeError) {
+      setClips((previous) => previous.map((clip) => clip.id === id ? { ...clip, likePending: false } : clip));
+      setDataError(`Could not update like: ${likeError instanceof Error ? likeError.message : String(likeError)}`);
+    }
+  };
 
-  if (admin) return <AdminAccess onBack={goHome}>{(onSignOut) => <><AdminView clips={clips} loading={dataLoading} dataError={dataError} onBack={goHome} onSignOut={onSignOut} onAuthorized={loadAdminClips} onUpload={() => setUploadOpen(true)} onDelete={(id) => { void deleteClip(id).catch((error) => setDataError(error.message)); }} onFeature={featureClip}/>{uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} onAdd={addClip}/>}</>}</AdminAccess>;
+  if (admin) return <AdminAccess onBack={goHome}>{(onSignOut) => <><AdminView clips={clips} loading={dataLoading} dataError={dataError} onBack={goHome} onSignOut={onSignOut} onAuthorized={loadAdminClips} onUpload={() => setUploadOpen(true)} onDelete={(id) => { void deleteClip(id).catch((error) => setDataError(error.message)); }} onFeature={featureClip} onLike={toggleLike}/>{uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} onAdd={addClip}/>}</>}</AdminAccess>;
 
   return (
     <div className="site-shell">
@@ -497,13 +537,13 @@ function App() {
             <div className="filter-control"><Grid2X2 size={15}/><select value={tagFilter} onChange={e => setTagFilter(e.target.value)} aria-label="Filter by highlight type">{["All types", "3K", "4K", "Ace", "clutch", "Retake", "Entry"].map(m => <option key={m}>{m}</option>)}</select><ChevronDown size={14}/></div>
             <div className="sort-control"><span>Sort</span><select value={sort} onChange={e => setSort(e.target.value)}><option>Newest first</option><option>Oldest first</option></select></div>
           </div>
-          <div className="clip-grid">{filtered.map(c => <ClipCard key={c.id} clip={c} onOpen={setModalClip} onFeature={featureClip}/>)}</div>
+          <div className="clip-grid">{filtered.map(c => <ClipCard key={c.id} clip={c} onOpen={setModalClip} onLike={toggleLike}/>)}</div>
           {!dataLoading && !dataError && filtered.length === 0 && <div className="empty-state"><Search size={28}/><h3>No highlights found</h3><p>Try a different search or filter.</p><button className="secondary-button" onClick={() => {setSearch("");setMapFilter("All maps");setTagFilter("All types");}}>Clear filters</button></div>}
           <div className="load-more"><span/> <span>YOU'VE REACHED THE END FOR NOW</span> <span/></div>
         </section>
       </main>
       <footer id="about"><button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={17}/></span><span>CLUTCH<span className="brand-muted">ARCHIVE</span></span></button><span>MADE FOR THE LOVE OF THE GAME.</span></footer>
-      {modalClip && <Modal clip={modalClip} onClose={() => setModalClip(null)}/>}
+      {modalClip && <Modal clip={clips.find((clip) => clip.id === modalClip.id) ?? modalClip} onClose={() => setModalClip(null)} onLike={toggleLike}/>}
       {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} onAdd={addClip}/>}
     </div>
   );
