@@ -156,6 +156,7 @@ function AdminAccess({ onBack, children }) {
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
+  const [accessError, setAccessError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -199,11 +200,12 @@ function AdminAccess({ onBack, children }) {
 
     let active = true;
     setAccessChecked(false);
+    setAccessError("");
     supabase.from("admin_users").select("user_id").eq("user_id", session.user.id).maybeSingle()
       .then(({ data, error: accessError }) => {
         if (!active) return;
         if (accessError) {
-          setError(`Could not verify owner access: ${accessError.message}`);
+          setAccessError(accessError.message);
           setIsAdmin(false);
         } else {
           setIsAdmin(Boolean(data));
@@ -212,7 +214,7 @@ function AdminAccess({ onBack, children }) {
       })
       .catch((accessError) => {
         if (!active) return;
-        setError(`Could not verify owner access: ${accessError instanceof Error ? accessError.message : String(accessError)}`);
+        setAccessError(accessError instanceof Error ? accessError.message : String(accessError));
         setIsAdmin(false);
         setAccessChecked(true);
       });
@@ -258,6 +260,14 @@ function AdminAccess({ onBack, children }) {
 
   if (!sessionLoaded || (session && !accessChecked)) {
     return <AdminAccessMessage onBack={onBack} title="Checking admin access">Please wait while your account is verified.</AdminAccessMessage>;
+  }
+
+  if (session && accessError) {
+    return (
+      <AdminAccessMessage onBack={onBack} title="Could not verify owner access">
+        The owner allowlist check failed: {accessError}. Confirm that the Supabase setup SQL ran successfully in this project, then retry.
+      </AdminAccessMessage>
+    );
   }
 
   if (session && isAdmin) return children(signOut, error);
