@@ -9,6 +9,14 @@ import {
 } from "lucide-react";
 
 const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis"];
+const MAX_VIDEO_SIZE_BYTES = 50_000_000;
+const MAX_VIDEO_SIZE_LABEL = "50 MB";
+const VIDEO_SIZE_ERROR = `Supabase's current Free plan limit is 50 MB per file. Compress the video or upgrade the Supabase plan to upload larger files.`;
+
+function videoSizeError(file) {
+  if (file.size <= MAX_VIDEO_SIZE_BYTES) return "";
+  return `This video is larger than ${MAX_VIDEO_SIZE_LABEL}. ${VIDEO_SIZE_ERROR}`;
+}
 
 function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) {
   return (
@@ -80,6 +88,7 @@ function HighlightFormModal({ clip, onClose, onSave }) {
     e.preventDefault();
     if (!title.trim()) return setError("Add a title for this highlight.");
     if (!clip && !file) return setError("Choose a video file to upload.");
+    if (file && videoSizeError(file)) return setError(videoSizeError(file));
     setBusy(true);
     setError("");
     try {
@@ -98,8 +107,8 @@ function HighlightFormModal({ clip, onClose, onSave }) {
           <label className="drop-zone">
             <UploadCloud size={27}/>
             <strong>{file ? file.name : clip?.videoPath ? "Keep current video or choose a replacement" : "Choose a video file"}</strong>
-            <span>{file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB · ready to upload` : "MP4, WebM or MOV · leave empty to keep the current video"}</span>
-            <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={e => setFile(e.target.files?.[0] || null)} />
+            <span>{file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB · ready to upload` : "MP4, WebM or MOV · max 50 MB per file on the current Supabase plan"}</span>
+            <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={e => { const selectedFile = e.target.files?.[0] || null; setFile(selectedFile); setError(selectedFile ? videoSizeError(selectedFile) : ""); }} />
           </label>
           <div className="field"><label htmlFor="title">Highlight title</label><input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. 1v3 clutch on Mirage" /></div>
           <div className="form-grid">
@@ -335,6 +344,10 @@ function uploadVideo(file, objectPath, accessToken, onProgress) {
         onProgress(Math.round((bytesUploaded / bytesTotal) * 100));
       },
       onError(error) {
+        if (/413|maximum size exceeded/i.test(error.message)) {
+          reject(new Error(VIDEO_SIZE_ERROR));
+          return;
+        }
         reject(new Error(`Video upload failed: ${error.message}`));
       },
       onSuccess() {

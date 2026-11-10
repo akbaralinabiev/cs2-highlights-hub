@@ -90,7 +90,7 @@ Owner route:
 - Uploads go directly from the browser to the `highlights` Supabase Storage bucket using the signed-in owner session.
 - New uploads are published to the public gallery.
 - The bucket is public for playback; its write operations are restricted to allowlisted owners by RLS.
-- Check the current Supabase plan and bucket upload-size limit before uploading large videos. Resumable uploads improve reliability but do not override those limits.
+- This Supabase project is on the Free plan, which has a fixed 50 MB per-file upload limit. Compress videos to 50 MB or smaller, or upgrade the project plan to allow larger files; resumable uploads do not override the limit.
 - Visitor likes are stored in Supabase and are limited to one per browser profile. Because visitors do not sign in, clearing browser storage or changing browsers can allow another like; this is lightweight engagement tracking, not fraud-resistant voting.
 
 ## Build and preview
