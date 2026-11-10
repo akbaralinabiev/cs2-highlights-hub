@@ -4,13 +4,13 @@ import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, to
 import {
   Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard,
   Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart,
-  LayoutDashboard, LogOut, Plus, Search, Settings, ShieldCheck, Star,
+  LayoutDashboard, LogOut, Pencil, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
 } from "lucide-react";
 
 const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis"];
 
-function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature }) {
+function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) {
   return (
     <article className="clip-card">
       <button className="video-preview" onClick={() => onOpen(clip)} aria-label={`Open ${clip.title}`}>
@@ -24,6 +24,7 @@ function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature }) {
           ? <video className="clip-video-preview" src={clip.videoUrl} preload="metadata" muted playsInline />
           : <div className="preview-center"><span className="play-circle"><span /></span><span className="preview-hint">VIDEO PREVIEW</span></div>}
         {admin && <span className="delete-button" onClick={(e) => { e.stopPropagation(); onDelete(clip.id); }} title="Delete clip"><Trash2 size={15}/></span>}
+        {admin && <span className="edit-button" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); onEdit(clip); }} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onEdit(clip); } }} title="Edit highlight" aria-label={`Edit ${clip.title}`}><Pencil size={15}/></span>}
         <span className="play-overlay"><span className="play-triangle">▶</span></span>
       </button>
       <div className="clip-info">
@@ -67,10 +68,10 @@ function Modal({ clip, onClose, onLike }) {
   );
 }
 
-function UploadModal({ onClose, onAdd }) {
-  const [title, setTitle] = useState("");
-  const [map, setMap] = useState("Mirage");
-  const [tag, setTag] = useState("3K");
+function HighlightFormModal({ clip, onClose, onSave }) {
+  const [title, setTitle] = useState(clip?.title ?? "");
+  const [map, setMap] = useState(clip?.map ?? "Mirage");
+  const [tag, setTag] = useState(clip?.tags?.[0] ?? "3K");
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -78,11 +79,11 @@ function UploadModal({ onClose, onAdd }) {
   const submit = async (e) => {
     e.preventDefault();
     if (!title.trim()) return setError("Add a title for this highlight.");
-    if (!file) return setError("Choose a video file to upload.");
+    if (!clip && !file) return setError("Choose a video file to upload.");
     setBusy(true);
     setError("");
     try {
-      await onAdd({ title: title.trim(), map, tags: [tag], file, onProgress: setProgress });
+      await onSave({ title: title.trim(), map, tags: [tag], file, onProgress: setProgress });
       onClose();
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : String(uploadError));
@@ -92,12 +93,12 @@ function UploadModal({ onClose, onAdd }) {
   return (
     <div className="modal-backdrop" onClick={() => { if (!busy) onClose(); }}>
       <div className="upload-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-heading"><div><span className="eyebrow">CONTENT LIBRARY</span><h2>New highlight</h2></div><button className="icon-button" disabled={busy} onClick={onClose}><X size={18}/></button></div>
+        <div className="modal-heading"><div><span className="eyebrow">CONTENT LIBRARY</span><h2>{clip ? "Edit highlight" : "New highlight"}</h2></div><button className="icon-button" disabled={busy} onClick={onClose}><X size={18}/></button></div>
         <form onSubmit={submit}>
           <label className="drop-zone">
             <UploadCloud size={27}/>
-            <strong>{file ? file.name : "Choose a video file"}</strong>
-            <span>{file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB · ready to upload` : "MP4, WebM or MOV · uploads directly to your Supabase bucket"}</span>
+            <strong>{file ? file.name : clip?.videoPath ? "Keep current video or choose a replacement" : "Choose a video file"}</strong>
+            <span>{file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB · ready to upload` : "MP4, WebM or MOV · leave empty to keep the current video"}</span>
             <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={e => setFile(e.target.files?.[0] || null)} />
           </label>
           <div className="field"><label htmlFor="title">Highlight title</label><input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. 1v3 clutch on Mirage" /></div>
@@ -107,15 +108,15 @@ function UploadModal({ onClose, onAdd }) {
           </div>
           {busy && <div className="upload-progress"><span>Uploading video… {progress}%</span><progress max="100" value={progress}/></div>}
           {error && <p className="form-error" role="alert">{error}</p>}
-          <div className="demo-warning"><ShieldCheck size={16}/><span>Video and highlight details will be saved in Supabase and published to the public gallery.</span></div>
-          <div className="modal-actions"><button type="button" className="secondary-button" disabled={busy} onClick={onClose}>Cancel</button><button className="primary-button" type="submit" disabled={busy || !isSupabaseConfigured}>{busy ? `Uploading ${progress}%` : <><Plus size={16}/> Upload highlight</>}</button></div>
+          <div className="demo-warning"><ShieldCheck size={16}/><span>{clip ? "Saving changes keeps this highlight’s likes." : "Video and highlight details will be saved in Supabase and published to the public gallery."}</span></div>
+          <div className="modal-actions"><button type="button" className="secondary-button" disabled={busy} onClick={onClose}>Cancel</button><button className="primary-button" type="submit" disabled={busy || !isSupabaseConfigured}>{busy ? `${file ? `Uploading ${progress}%` : "Saving..."}` : clip ? "Save changes" : <><Plus size={16}/> Upload highlight</>}</button></div>
         </form>
       </div>
     </div>
   );
 }
 
-function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized, onUpload, onDelete, onFeature, onLike }) {
+function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized, onUpload, onEdit, onDelete, onFeature, onLike }) {
   const [section, setSection] = useState("Overview");
   useEffect(() => { void onAuthorized(); }, []);
   const nav = [
@@ -138,9 +139,9 @@ function AdminView({ clips, loading, dataError, onBack, onSignOut, onAuthorized,
             <div className="page-title-row"><div><span className="eyebrow">YOUR PERSONAL LIBRARY</span><h1>Dashboard</h1><p className="subheading">Your CS2 moments, organized in one place.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>
             <div className="stat-grid"><div className="stat-card"><span className="stat-icon"><Film size={18}/></span><span className="stat-label">TOTAL HIGHLIGHTS</span><strong>{loading ? "…" : clips.length}</strong><small>In your library</small></div><div className="stat-card"><span className="stat-icon"><Star size={18}/></span><span className="stat-label">FEATURED CLIPS</span><strong>{clips.filter(c => c.featured).length}</strong><small>Shown as favorites</small></div><div className="stat-card"><span className="stat-icon"><Database size={18}/></span><span className="stat-label">STORAGE STATUS</span><strong>Connected</strong><small>Supabase Storage</small></div></div>
             <div className="section-heading"><div><h2>Recent highlights</h2><p>Manage your latest clips</p></div><button className="text-button" onClick={() => setSection("Highlights")}>View all <ArrowLeft className="arrow-right" size={14}/></button></div>
-            {loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-list">{clips.slice(0, 5).map(c => <div className="admin-list-row" key={c.id}><div className="mini-video"><Video size={17}/></div><div className="list-title"><strong>{c.title}</strong><span>{c.map}</span></div><span className="draft-pill">{c.is_published ? "Published" : "Draft"}</span><button className="icon-button danger-quiet" onClick={() => onDelete(c.id)} title="Delete highlight"><Trash2 size={15}/></button></div>)}</div>}
+            {loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-list">{clips.slice(0, 5).map(c => <div className="admin-list-row" key={c.id}><div className="mini-video"><Video size={17}/></div><div className="list-title"><strong>{c.title}</strong><span>{c.map}</span></div><span className="draft-pill">{c.is_published ? "Published" : "Draft"}</span><button className="icon-button" onClick={() => onEdit(c)} title={`Edit ${c.title}`}><Pencil size={15}/></button><button className="icon-button danger-quiet" onClick={() => onDelete(c.id)} title="Delete highlight"><Trash2 size={15}/></button></div>)}</div>}
           </>}
-          {section === "Highlights" && <><div className="page-title-row"><div><span className="eyebrow">CONTENT LIBRARY</span><h1>Highlights</h1><p className="subheading">Edit, feature or remove clips.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>{loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-grid">{clips.map(c => <ClipCard key={c.id} clip={c} onOpen={() => {}} onLike={onLike} admin onDelete={onDelete} onFeature={onFeature}/>)}</div>}</>}
+          {section === "Highlights" && <><div className="page-title-row"><div><span className="eyebrow">CONTENT LIBRARY</span><h1>Highlights</h1><p className="subheading">Edit, feature or remove clips.</p></div><button className="primary-button" onClick={onUpload}><Plus size={16}/> Add highlight</button></div>{loading ? <p className="subheading">Loading highlights…</p> : <div className="admin-grid">{clips.map(c => <ClipCard key={c.id} clip={c} onOpen={() => {}} onLike={onLike} admin onDelete={onDelete} onEdit={onEdit} onFeature={onFeature}/>)}</div>}</>}
           {section === "Uploads" && <><div className="page-title-row"><div><span className="eyebrow">MEDIA STORAGE</span><h1>Uploads</h1><p className="subheading">Videos upload directly to your Supabase Storage bucket.</p></div><button className="primary-button" onClick={onUpload}><UploadCloud size={16}/> New upload</button></div><div className="setup-card"><div className="setup-icon"><HardDrive size={25}/></div><h2>Supabase Storage connected</h2><p>Videos are uploaded directly to your highlights bucket using resumable transfers. The bucket’s configured file-size limit and your Supabase plan apply.</p><div className="setup-steps"><span><Check size={15}/> Owner-only upload policies enabled</span><span><Check size={15}/> Video metadata saved in highlights</span><span><Check size={15}/> Published clips appear in the public gallery</span></div><span className="coming-soon">SUPABASE STORAGE</span></div></>}
           {section === "Settings" && <><div className="page-title-row"><div><span className="eyebrow">PREFERENCES</span><h1>Settings</h1><p className="subheading">Your site configuration.</p></div></div><div className="settings-card"><div><strong>Site name</strong><p>Shown in the header and browser tab.</p></div><span>Clutch Archive</span></div><div className="settings-card"><div><strong>Admin access</strong><p>Supabase Auth and owner allowlist.</p></div><span>Connected</span></div><div className="settings-card"><div><strong>Video storage</strong><p>Owner-restricted uploads with public playback for published clips.</p></div><span>Supabase Storage</span></div></>}
         </div>
@@ -355,6 +356,7 @@ function App() {
   const [tagFilter, setTagFilter] = useState("All types");
   const [modalClip, setModalClip] = useState(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [editingClip, setEditingClip] = useState(null);
   const [sort, setSort] = useState("Newest first");
   const loadRequest = useRef(0);
   const [visitorId, setVisitorId] = useState(null);
@@ -460,6 +462,53 @@ function App() {
     setClips((previous) => [clip, ...previous]);
   };
 
+  const updateClip = async ({ file, onProgress, ...metadata }) => {
+    if (!supabase || !editingClip) throw new Error("The highlight could not be updated.");
+    let replacementPath;
+
+    if (file) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw new Error(`Could not verify your upload session: ${sessionError.message}`);
+      if (!session) throw new Error("Your session expired. Sign in again before replacing the video.");
+      const safeName = file.name.normalize("NFKD").replace(/[^\w.-]+/g, "-").replace(/^-+|-+$/g, "");
+      replacementPath = `${crypto.randomUUID()}-${safeName || "highlight-video"}`;
+      await uploadVideo(file, replacementPath, session.access_token, onProgress);
+    }
+
+    const changes = {
+      title: metadata.title,
+      map: metadata.map,
+      tags: metadata.tags,
+      ...(replacementPath ? { video_path: replacementPath } : {}),
+    };
+    const { data, error } = await supabase.from("highlights")
+      .update(changes)
+      .eq("id", editingClip.id)
+      .select("*")
+      .single();
+
+    if (error) {
+      if (replacementPath) {
+        const { error: cleanupError } = await supabase.storage.from("highlights").remove([replacementPath]);
+        if (cleanupError) {
+          throw new Error(`Highlight could not be updated: ${error.message}. The replacement video could not be cleaned up: ${cleanupError.message}`);
+        }
+      }
+      throw new Error(`Highlight could not be updated: ${error.message}`);
+    }
+
+    const updatedClip = toClip(data);
+    setClips((previous) => previous.map((clip) => clip.id === updatedClip.id ? { ...clip, ...updatedClip } : clip));
+    setEditingClip(null);
+
+    if (replacementPath && editingClip.videoPath) {
+      const { error: cleanupError } = await supabase.storage.from("highlights").remove([editingClip.videoPath]);
+      if (cleanupError) {
+        setDataError(`Highlight updated, but its previous video could not be removed from storage: ${cleanupError.message}`);
+      }
+    }
+  };
+
   const deleteClip = async (id) => {
     if (!supabase) return;
     const clip = clips.find((item) => item.id === id);
@@ -511,7 +560,7 @@ function App() {
     }
   };
 
-  if (admin) return <AdminAccess onBack={goHome}>{(onSignOut) => <><AdminView clips={clips} loading={dataLoading} dataError={dataError} onBack={goHome} onSignOut={onSignOut} onAuthorized={loadAdminClips} onUpload={() => setUploadOpen(true)} onDelete={(id) => { void deleteClip(id).catch((error) => setDataError(error.message)); }} onFeature={featureClip} onLike={toggleLike}/>{uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} onAdd={addClip}/>}</>}</AdminAccess>;
+  if (admin) return <AdminAccess onBack={goHome}>{(onSignOut) => <><AdminView clips={clips} loading={dataLoading} dataError={dataError} onBack={goHome} onSignOut={onSignOut} onAuthorized={loadAdminClips} onUpload={() => setUploadOpen(true)} onEdit={setEditingClip} onDelete={(id) => { void deleteClip(id).catch((error) => setDataError(error.message)); }} onFeature={featureClip} onLike={toggleLike}/>{uploadOpen && <HighlightFormModal onClose={() => setUploadOpen(false)} onSave={addClip} />}{editingClip && <HighlightFormModal clip={editingClip} onClose={() => setEditingClip(null)} onSave={updateClip} />}</>}</AdminAccess>;
 
   return (
     <div className="site-shell">
@@ -544,7 +593,6 @@ function App() {
       </main>
       <footer id="about"><button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={17}/></span><span>CLUTCH<span className="brand-muted">ARCHIVE</span></span></button><span>MADE FOR THE LOVE OF THE GAME.</span></footer>
       {modalClip && <Modal clip={clips.find((clip) => clip.id === modalClip.id) ?? modalClip} onClose={() => setModalClip(null)} onLike={toggleLike}/>}
-      {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} onAdd={addClip}/>}
     </div>
   );
 }

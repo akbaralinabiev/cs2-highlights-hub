@@ -17,6 +17,7 @@ The app uses Supabase Auth, Postgres and Storage for owner-managed video publish
 - Visitor pages have no upload or dashboard controls. The owner route is `/#admin`.
 - The owner gate checks Supabase Auth and an explicit `admin_users` allowlist.
 - Highlights and video files persist in the `highlights` table and Storage bucket. Uploads use resumable transfers directly from the browser.
+- Admins can edit a highlight's title, map, type, or replace its video. Edits update the same database row, preserving visitor likes.
 - Visitors can like/unlike published videos; counts are stored in Supabase and are limited to one like per browser profile. Because visitors do not sign in, clearing browser storage or changing browsers can create another like; this is a lightweight engagement feature, not fraud-resistant voting.
 - New uploads are published to the public gallery. The bucket is public for playback, while upload/update/delete operations are restricted by RLS to allowlisted owners.
 - Video upload size limits are controlled by your Supabase project plan and Storage settings; check those limits before uploading large files.
