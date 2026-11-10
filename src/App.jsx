@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import * as tus from "tus-js-client";
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, toClip } from "./lib/supabase.js";
 import {
-  Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, ExternalLink,
+  ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, ExternalLink,
   Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart,
   LayoutDashboard, LogOut, Pencil, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
@@ -350,7 +350,10 @@ function App() {
   const [clips, setClips] = useState([]);
   const [dataLoading, setDataLoading] = useState(isSupabaseConfigured);
   const [dataError, setDataError] = useState("");
-  const [admin, setAdmin] = useState(window.location.hash === "#admin");
+  const [route, setRoute] = useState(
+    window.location.hash === "#admin" ? "admin" :
+      window.location.hash === "#about" ? "about" : "highlights"
+  );
   const [search, setSearch] = useState("");
   const [mapFilter, setMapFilter] = useState("All maps");
   const [tagFilter, setTagFilter] = useState("All types");
@@ -408,10 +411,13 @@ function App() {
 
   useEffect(() => {
     const syncAdminRoute = () => {
-      setAdmin(window.location.hash === "#admin");
+      const nextRoute = window.location.hash === "#admin" ? "admin" :
+        window.location.hash === "#about" ? "about" : "highlights";
+      setRoute(nextRoute);
       void loadClips(false);
     };
     window.addEventListener("hashchange", syncAdminRoute);
+    if (!window.location.hash) window.history.replaceState(null, "", "#highlights");
     void loadClips(false);
     return () => {
       window.removeEventListener("hashchange", syncAdminRoute);
@@ -428,8 +434,8 @@ function App() {
 
   const goHome = () => {
     setClips((previous) => previous.filter((clip) => clip.is_published));
-    setAdmin(false);
-    window.location.hash = "";
+    setRoute("highlights");
+    window.location.hash = "highlights";
     window.scrollTo(0,0);
   };
   const addClip = async ({ file, onProgress, ...metadata }) => {
@@ -560,23 +566,18 @@ function App() {
     }
   };
 
-  if (admin) return <AdminAccess onBack={goHome}>{(onSignOut) => <><AdminView clips={clips} loading={dataLoading} dataError={dataError} onBack={goHome} onSignOut={onSignOut} onAuthorized={loadAdminClips} onUpload={() => setUploadOpen(true)} onEdit={setEditingClip} onDelete={(id) => { void deleteClip(id).catch((error) => setDataError(error.message)); }} onFeature={featureClip} onLike={toggleLike}/>{uploadOpen && <HighlightFormModal onClose={() => setUploadOpen(false)} onSave={addClip} />}{editingClip && <HighlightFormModal clip={editingClip} onClose={() => setEditingClip(null)} onSave={updateClip} />}</>}</AdminAccess>;
+  if (route === "admin") return <AdminAccess onBack={goHome}>{(onSignOut) => <><AdminView clips={clips} loading={dataLoading} dataError={dataError} onBack={goHome} onSignOut={onSignOut} onAuthorized={loadAdminClips} onUpload={() => setUploadOpen(true)} onEdit={setEditingClip} onDelete={(id) => { void deleteClip(id).catch((error) => setDataError(error.message)); }} onFeature={featureClip} onLike={toggleLike}/>{uploadOpen && <HighlightFormModal onClose={() => setUploadOpen(false)} onSave={addClip} />}{editingClip && <HighlightFormModal clip={editingClip} onClose={() => setEditingClip(null)} onSave={updateClip} />}</>}</AdminAccess>;
 
   return (
     <div className="site-shell">
       <header className="site-header">
         <button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={19}/></span><span>CLUTCH<span className="brand-muted">ARCHIVE</span></span></button>
-        <nav className="main-nav"><a className="nav-active" href="#highlights">Highlights</a><a href="#about">About</a></nav>
+        <nav className="main-nav"><a className={route === "highlights" ? "nav-active" : ""} href="#highlights">Highlights</a><a className={route === "about" ? "nav-active" : ""} href="#about">About</a></nav>
         <div className="header-actions"><span className="status-dot"/> <span className="online-label">PERSONAL FRAG MOVIE</span></div>
       </header>
-      <main>
-        <section className="hero">
-          <div className="hero-grid"/>
-          <div className="hero-content"><div className="hero-kicker"><span/> PERSONAL CS2 LIBRARY</div><h1>Every round has<br/>a <em>story.</em></h1><p>A collection of clutches, clean entries, and rounds worth remembering.</p><div className="hero-actions"><a className="primary-button" href="#highlights"><Clapperboard size={16}/> Explore highlights</a></div></div>
-          <div className="hero-aside"><div className="crosshair-large"><Crosshair size={92} strokeWidth={0.8}/></div><span className="aside-line"/> <span className="aside-caption">RECORDED MOMENTS / 001—∞</span></div>
-          <div className="hero-bottom"><span><Activity size={14}/> CLIP ARCHIVE</span><span>COUNTER-STRIKE 2 <b>●</b> PERSONAL COLLECTION</span><span>EST. 2026</span></div>
-        </section>
-        <section className="highlights-section" id="highlights">
+      {route === "highlights" ? (
+        <main>
+          <section className="highlights-section highlights-page" id="highlights">
           <div className="section-top"><div><span className="eyebrow">THE COLLECTION</span><h2>Latest highlights <span className="count-badge">{clips.length.toString().padStart(2,"0")}</span></h2><p className="section-description">The rounds that deserve a replay.</p></div></div>
           {dataError && <p className="auth-error" role="alert">{dataError}</p>}
           {dataLoading && <p className="section-description" role="status">Loading highlights…</p>}
@@ -589,22 +590,22 @@ function App() {
           <div className="clip-grid">{filtered.map(c => <ClipCard key={c.id} clip={c} onOpen={setModalClip} onLike={toggleLike}/>)}</div>
           {!dataLoading && !dataError && filtered.length === 0 && <div className="empty-state"><Search size={28}/><h3>No highlights found</h3><p>Try a different search or filter.</p><button className="secondary-button" onClick={() => {setSearch("");setMapFilter("All maps");setTagFilter("All types");}}>Clear filters</button></div>}
           <div className="load-more"><span/> <span>YOU'VE REACHED THE END FOR NOW</span> <span/></div>
-        </section>
-      </main>
-      <footer id="about" className="site-about">
-        <div className="about-brand">
-          <span className="brand-mark"><Crosshair size={17}/></span>
-          <span>CLUTCH<span className="brand-muted">ARCHIVE</span></span>
-        </div>
-        <div className="about-copy">
-          <span className="eyebrow">ABOUT</span>
-          <p>My Counter-Strike highlights and player profiles.</p>
-        </div>
-        <div className="profile-links" aria-label="Player profiles">
-          <a href="https://steamcommunity.com/id/austinphilips" target="_blank" rel="noopener noreferrer">Steam <ExternalLink size={13}/></a>
-          <a href="https://www.faceit.com/en/players/the_fear14" target="_blank" rel="noopener noreferrer">FACEIT <ExternalLink size={13}/></a>
-        </div>
-      </footer>
+          </section>
+        </main>
+      ) : (
+        <main className="about-page" id="about">
+          <section className="about-content">
+            <span className="brand-mark about-mark"><Crosshair size={25}/></span>
+            <span className="eyebrow">PLAYER PROFILE</span>
+            <h1>About</h1>
+            <p>My Counter-Strike highlights and player profiles.</p>
+            <div className="profile-links" aria-label="Player profiles">
+              <a href="https://steamcommunity.com/id/austinphilips" target="_blank" rel="noopener noreferrer">Steam profile <ExternalLink size={15}/></a>
+              <a href="https://www.faceit.com/en/players/the_fear14" target="_blank" rel="noopener noreferrer">FACEIT profile <ExternalLink size={15}/></a>
+            </div>
+          </section>
+        </main>
+      )}
       {modalClip && <Modal clip={clips.find((clip) => clip.id === modalClip.id) ?? modalClip} onClose={() => setModalClip(null)} onLike={toggleLike}/>}
     </div>
   );
