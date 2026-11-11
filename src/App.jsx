@@ -193,6 +193,29 @@ function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) 
   );
 }
 
+function TrailerCard() {
+  return (
+    <div className="hero-trailer-card">
+      <div className="hero-trailer-screen">
+        <video
+          className="hero-trailer-video"
+          src="/cs2-release-trailer.mp4"
+          autoPlay
+          controls
+          muted
+          playsInline
+          preload="metadata"
+          aria-label="Counter-Strike 2 release trailer"
+        />
+      </div>
+      <div className="hero-trailer-caption">
+        <span className="eyebrow">COUNTER-STRIKE 2</span>
+        <strong>Release trailer</strong>
+      </div>
+    </div>
+  );
+}
+
 function Modal({ clip, onClose, onLike }) {
   if (!clip) return null;
   return (
@@ -737,25 +760,8 @@ function App() {
               <p>A collection of clutches, clean entries, and rounds worth remembering.</p>
               <div className="hero-actions"><a className="primary-button" href="#collection"><Clapperboard size={16}/> Explore highlights</a></div>
             </div>
-            <div className="hero-aside" aria-label="CS2 release trailer video placeholder">
-              <div className="hero-trailer-card">
-                <div className="hero-trailer-screen">
-                  <video
-                    className="hero-trailer-video"
-                    src="/cs2-release-trailer.mp4"
-                    autoPlay
-                    controls
-                    muted
-                    playsInline
-                    preload="metadata"
-                    aria-label="Counter-Strike 2 release trailer"
-                  />
-                </div>
-                <div className="hero-trailer-caption">
-                  <span className="eyebrow">COUNTER-STRIKE 2</span>
-                  <strong>Release trailer</strong>
-                </div>
-              </div>
+            <div className="hero-aside">
+              <TrailerCard/>
             </div>
             <div className="hero-bottom"><span><Activity size={14}/> CLIP ARCHIVE</span><span>COUNTER-STRIKE 2 <b>●</b> PERSONAL COLLECTION</span><span>EST. 2026</span></div>
           </section>
