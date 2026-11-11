@@ -7,7 +7,7 @@ import {
   LayoutDashboard, LogOut, Menu, Pencil, Play, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
 } from "lucide-react";
-
+``
 const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis", "Vertigo"];
 const mapIconPaths = {
   Ancient: "/maps/ancient.svg",
