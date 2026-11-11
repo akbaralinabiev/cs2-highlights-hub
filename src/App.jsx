@@ -222,7 +222,7 @@ function Modal({ clip, onClose, onLike }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <button className="icon-button modal-close" onClick={onClose}><X size={18}/></button>
+        <button className="icon-button modal-close" onClick={onClose} aria-label="Close video"><X size={18}/></button>
         <div className="modal-video">{clip.videoUrl
           ? <video src={clip.videoUrl} controls autoPlay playsInline />
           : <><Video size={42}/><p>No video file is attached</p><small>This is a demo highlight.</small></>}</div>
@@ -855,6 +855,17 @@ function App() {
               </div>
             </section>
           </div>
+          <div className="about-build-divider" aria-hidden="true"/>
+          <footer className="about-build-note">
+            <div className="about-build-copy">
+              <span className="eyebrow">BUILT WITH CARE <span aria-hidden="true">/</span> MADE FOR THE ROUNDS WORTH REMEMBERING</span>
+              <p>A personal CS2 highlight hub, built with <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">React</a> and <a href="https://supabase.com/" target="_blank" rel="noopener noreferrer">Supabase</a>. Video uploads, map filters, and plenty of thoughtful details bring it all together.</p>
+            </div>
+            <div className="about-build-stat" aria-label="More than 3,700 lines of source code">
+              <strong>3,700<span>+</span></strong>
+              <span className="eyebrow">LINES OF CODE</span>
+            </div>
+          </footer>
         </main>
       )}
       {modalClip && <Modal clip={clips.find((clip) => clip.id === modalClip.id) ?? modalClip} onClose={() => setModalClip(null)} onLike={toggleLike}/>}
