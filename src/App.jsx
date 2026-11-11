@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 import * as tus from "tus-js-client";
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, toClip } from "./lib/supabase.js";
 import {
-  Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, Code2, ExternalLink,
+  Activity, ArrowLeft, ArrowRight, Check, ChevronDown, CircleUserRound, Clapperboard, Code2, ExternalLink,
   Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart, MapPin,
-  LayoutDashboard, LogOut, Menu, Pencil, Plus, Search, Settings, ShieldCheck, Star,
+  LayoutDashboard, LogOut, Menu, Pencil, Play, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
 } from "lucide-react";
 
@@ -45,6 +45,33 @@ const tagColorClasses = {
   entry: "tag-green",
   retake: "tag-yellow",
 };
+const crosshairPresets = [
+  { id: "donk", name: "donk", size: 2, gap: 1, thickness: 2, rgb: [0, 255, 247], shareCode: "CS263KXGKDQJUCHNLnQmFR5eLWGS4uBQs8VRdLh7ZGpaGn" },
+  { id: "s1mple", name: "s1mple", size: 2, gap: 1, thickness: 2, rgb: [255, 255, 0], shareCode: "CSqdyVHCfmbXwfATimefA3LMo9PUmPzqFZpYyXn5eWmv9A" },
+  { id: "monesy", name: "m0NESY", size: 2, gap: 1, thickness: 2, rgb: [255, 255, 0], shareCode: "CSSTHp86Bio65tsi8mC5AEBRwoBRT8pAx9RzTW2NcwOAYF" },
+  { id: "niko", name: "NiKo", size: 2, gap: 2, thickness: 3, rgb: [0, 255, 145], shareCode: "CSbWBdS8cG7fAf7fjkTfUdNGMAxtrwXURGZOBaFG4GCEZB" },
+  { id: "zywoo", name: "ZywOo", size: 2, gap: 2, thickness: 2, rgb: [0, 255, 223], shareCode: "CSj6Bm6i4pdQzFuJuxRWuFRDsH6cdqT4tzyiqzXGs37eYD" },
+  { id: "xantares", name: "XANTARES", size: 5, gap: 5, thickness: 1, rgb: [50, 250, 50], shareCode: "CSbTEaGDR5GhNAifhXfx8dnavVdRCvsLSCeTDvSS8ndJQE" },
+  { id: "ropz", name: "ropz", size: 4, gap: 2, thickness: 1, rgb: [0, 255, 0], shareCode: "CSUxjvBKxbaTKG5sfdufqzDvzeAiaTuveQmT6XFOvWmvAc" },
+  { id: "b1t", name: "b1t", size: 2, gap: 1, thickness: 2, rgb: [0, 255, 0], shareCode: "CSiuObDzWBiXvWXr8UJU5TLsmhBNMJMBaH5AjAS63CFNqF" },
+  { id: "twistzz", name: "Twistzz", size: 8, gap: 3, thickness: 3, rgb: [0, 255, 135], shareCode: "CSyAqUtN69wWNvDFi89hfa9qHCnj5JURoPsvD99oC8V6wL" },
+  { id: "frozen", name: "frozen", size: 4, gap: 1, thickness: 2, rgb: [0, 255, 0], shareCode: "CSXhYcRknnJRNRipQDscrX69AjRiaTuveQmT6XFOvWmvAc" },
+  { id: "jl", name: "jL", size: 3, gap: 2, thickness: 1, rgb: [0, 255, 135], shareCode: "CSrSUSeb4VSYxmNKG64hKYC2nXKyi8mreHXdMYwcyiL5TV" },
+  { id: "wonderful", name: "w0nderful", size: 2, gap: 1, thickness: 2, rgb: [0, 255, 0], shareCode: "CSnBAzYp5uNERqbePBrROJnWAHTV5Lop7nj4yGRzEYpX5R" },
+  { id: "karrigan", name: "karrigan", size: 5, gap: 2, thickness: 2, rgb: [0, 255, 54], shareCode: "CSF5QOXSt8HsLzNDdXwUUWkR6JsQokQ6KmJxfNzrPurHwO" },
+];
+const crosshairScenes = [
+  { map: "Ancient", location: "MID", theme: "ancient-a" },
+  { map: "Anubis", location: "A SITE", theme: "anubis-a" },
+  { map: "Cache", location: "B SITE", theme: "cache-a" },
+  { map: "Inferno", location: "Banan", theme: "inferno-mid" },
+  { map: "Mirage", location: "A SITE", theme: "mirage-mid" },
+  { map: "Nuke", location: "B SITE", theme: "nuke-b" },
+];
+
+function getCrosshairColor(preset) {
+  return `rgb(${preset.rgb.join(" ")})`;
+}
 
 function videoSizeError(file) {
   if (file.size <= MAX_VIDEO_SIZE_BYTES) return "";
@@ -55,9 +82,69 @@ function getTagColorClass(tag) {
   return tagColorClasses[tag.toLowerCase()] ?? "";
 }
 
-function MapIcon({ map }) {
+function MapIcon({ map, className = "map-icon" }) {
   const iconPath = mapIconPaths[map];
-  return iconPath ? <img className="map-icon" src={iconPath} alt="" aria-hidden="true"/> : null;
+  return iconPath ? <img className={className} src={iconPath} alt="" aria-hidden="true"/> : null;
+}
+
+function CrosshairCard({ preset, feedback, onCopy }) {
+  const presetIndex = crosshairPresets.findIndex((item) => item.id === preset.id);
+  const [sceneIndex, setSceneIndex] = useState(presetIndex % crosshairScenes.length);
+  const scene = crosshairScenes[sceneIndex];
+  const color = getCrosshairColor(preset);
+  const feedbackForCard = feedback?.id === preset.id ? feedback : null;
+
+  const moveScene = (direction) => {
+    setSceneIndex((current) => (current + direction + crosshairScenes.length) % crosshairScenes.length);
+  };
+
+  return (
+    <article className="crosshair-card">
+      <div className={`crosshair-scene scene-${scene.theme}`} aria-label={`${scene.map}, ${scene.location} crosshair preview`}>
+        <div className="crosshair-scene-heading">
+          <span className="eyebrow">MAP PREVIEW</span>
+          <span className="crosshair-scene-map"><MapIcon map={scene.map}/>{scene.map} <i>/</i> {scene.location}</span>
+        </div>
+        <MapIcon map={scene.map} className="crosshair-scene-map-art"/>
+        <span
+          className="crosshair-preview"
+          style={{
+            "--crosshair-color": color,
+            "--crosshair-length": `${Math.max(2.5, Math.min(9, preset.size * 1.1))}px`,
+            "--crosshair-gap": `${Math.max(1.5, Math.min(4.5, preset.gap * 0.85))}px`,
+            "--crosshair-thickness": `${Math.max(1.5, Math.min(3.5, preset.thickness * 0.85))}px`,
+          }}
+          aria-hidden="true"
+        >
+          <span className="crosshair-arm crosshair-arm-top"/>
+          <span className="crosshair-arm crosshair-arm-bottom"/>
+          <span className="crosshair-arm crosshair-arm-left"/>
+          <span className="crosshair-arm crosshair-arm-right"/>
+        </span>
+        <div className="crosshair-scene-controls" aria-label="Map preview controls">
+          <button type="button" onClick={() => moveScene(-1)} aria-label="Previous map position"><ArrowLeft size={14}/></button>
+          <span>{String(sceneIndex + 1).padStart(2, "0")} <i>/</i> {String(crosshairScenes.length).padStart(2, "0")}</span>
+          <button type="button" onClick={() => moveScene(1)} aria-label="Next map position"><ArrowRight size={14}/></button>
+        </div>
+      </div>
+      <div className="crosshair-card-info">
+        <h2>{preset.name}</h2>
+        <button
+          className={`crosshair-copy-button${feedbackForCard?.error ? " is-error" : ""}${feedbackForCard && !feedbackForCard.error ? " is-copied" : ""}`}
+          type="button"
+          onClick={() => { void onCopy(preset); }}
+        >
+          <span className="crosshair-copy-button-title">
+            {feedbackForCard?.error ? <X size={15}/> : feedbackForCard ? <Check size={15}/> : <Code2 size={15}/>}
+            {feedbackForCard?.error ? "Copy failed" : feedbackForCard ? "Copied" : "Copy crosshair"}
+          </span>
+          {feedbackForCard?.error ? (
+            <span className="crosshair-copy-button-message" role="alert">{feedbackForCard.error}</span>
+          ) : null}
+        </button>
+      </div>
+    </article>
+  );
 }
 
 function MapName({ map, className = "map-name" }) {
@@ -530,9 +617,11 @@ function App() {
   const [route, setRoute] = useState(
     window.location.hash === "#admin" ? "admin" :
       window.location.hash === "#about" ? "about" :
-        window.location.hash === "#journey" ? "journey" : "highlights"
+        window.location.hash === "#journey" ? "journey" :
+          window.location.hash === "#crosshairs" ? "crosshairs" : "highlights"
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [crosshairCopyFeedback, setCrosshairCopyFeedback] = useState(null);
   const [search, setSearch] = useState("");
   const [mapFilter, setMapFilter] = useState("All maps");
   const [tagFilter, setTagFilter] = useState("All types");
@@ -595,7 +684,8 @@ function App() {
     const syncAdminRoute = () => {
       const nextRoute = window.location.hash === "#admin" ? "admin" :
         window.location.hash === "#about" ? "about" :
-          window.location.hash === "#journey" ? "journey" : "highlights";
+          window.location.hash === "#journey" ? "journey" :
+            window.location.hash === "#crosshairs" ? "crosshairs" : "highlights";
       setRoute(nextRoute);
       setMobileMenuOpen(false);
       void loadClips(false);
@@ -625,12 +715,59 @@ function App() {
     const order = new Date(b.createdAt ?? b.id).getTime() - new Date(a.createdAt ?? a.id).getTime();
     return sort === "Newest first" ? order : -order;
   }), [clips, mapFilter, tagFilter, search, sort]);
+  const journeyData = useMemo(() => {
+    const mapCounts = new Map();
+    let clutchCount = 0;
+    for (const clip of clips) {
+      mapCounts.set(clip.map, (mapCounts.get(clip.map) ?? 0) + 1);
+      if (clip.tags.some((tag) => tag.toLowerCase().includes("clutch"))) clutchCount += 1;
+    }
+    return {
+      mapCounts: [...mapCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
+      clutchCount,
+    };
+  }, [clips]);
+  const journeyClips = useMemo(() => [...clips]
+    .filter((clip) => clip.videoUrl)
+    .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) ||
+      new Date(b.createdAt ?? b.id).getTime() - new Date(a.createdAt ?? a.id).getTime())
+    .slice(0, 3), [clips]);
   useEffect(() => {
     setVisibleClipCount(CLIPS_PER_PAGE);
   }, [search, mapFilter, tagFilter, sort]);
 
   const goHome = () => {
     setClips((previous) => previous.filter((clip) => clip.is_published));
+    setRoute("highlights");
+    window.location.hash = "highlights";
+    window.scrollTo(0,0);
+  };
+  const copyCrosshair = async (preset) => {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable in this browser.");
+      }
+      await navigator.clipboard.writeText(preset.shareCode);
+      setCrosshairCopyFeedback({ id: preset.id, error: "" });
+    } catch (error) {
+      setCrosshairCopyFeedback({
+        id: preset.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+  useEffect(() => {
+    if (!crosshairCopyFeedback || crosshairCopyFeedback.error) return undefined;
+    const timeout = window.setTimeout(() => {
+      setCrosshairCopyFeedback((current) => current?.id === crosshairCopyFeedback.id ? null : current);
+    }, 2600);
+    return () => window.clearTimeout(timeout);
+  }, [crosshairCopyFeedback]);
+  const openMapHighlights = (map) => {
+    setMapFilter(map);
+    setTagFilter("All types");
+    setSearch("");
+    setVisibleClipCount(CLIPS_PER_PAGE);
     setRoute("highlights");
     window.location.hash = "highlights";
     window.scrollTo(0,0);
@@ -769,7 +906,7 @@ function App() {
     <div className="site-shell">
       <header className="site-header" ref={headerRef}>
         <button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={19}/></span><span>THE<span className="brand-muted">FEAR14</span></span></button>
-        <nav className="main-nav"><a className={route === "highlights" ? "nav-active" : ""} href="#highlights">Highlights</a><a className={route === "about" ? "nav-active" : ""} href="#about">About</a><a className={route === "journey" ? "nav-active" : ""} href="#journey">Journey</a></nav>
+        <nav className="main-nav"><a className={route === "highlights" ? "nav-active" : ""} href="#highlights">Highlights</a><a className={route === "about" ? "nav-active" : ""} href="#about">About</a><a className={route === "journey" ? "nav-active" : ""} href="#journey">Journey</a><a className={route === "crosshairs" ? "nav-active" : ""} href="#crosshairs">Crosshairs</a></nav>
         <div
           className="mobile-nav"
           onKeyDown={(event) => {
@@ -799,6 +936,7 @@ function App() {
             <a className={route === "highlights" ? "nav-active" : ""} href="#highlights" onClick={() => setMobileMenuOpen(false)}>Highlights</a>
             <a className={route === "about" ? "nav-active" : ""} href="#about" onClick={() => setMobileMenuOpen(false)}>About</a>
             <a className={route === "journey" ? "nav-active" : ""} href="#journey" onClick={() => setMobileMenuOpen(false)}>Journey</a>
+            <a className={route === "crosshairs" ? "nav-active" : ""} href="#crosshairs" onClick={() => setMobileMenuOpen(false)}>Crosshairs</a>
           </nav>
         </div>
         <div className="header-actions"><span className="status-dot"/> <span className="online-label">PERSONAL FRAG MOVIE</span></div>
@@ -920,7 +1058,7 @@ function App() {
             </div>
           </footer>
         </main>
-      ) : (
+      ) : route === "journey" ? (
         <main className="journey-page" id="journey">
           <div className="journey-layout">
             <header className="journey-heading">
@@ -928,6 +1066,34 @@ function App() {
               <h1>From the first round<br/>to the ones <em>worth keeping.</em></h1>
               <p>A CS2 journey is built one round at a time. This is the thread behind the highlights: learning the game, finding a rhythm, and saving the moments that still feel good to replay.</p>
             </header>
+            <section className="journey-collection" aria-label="Collection statistics">
+              <span className="eyebrow">THE COLLECTION SO FAR</span>
+              {dataError && <p className="auth-error" role="alert">{dataError}</p>}
+              <div className="journey-stats">
+                <article className="journey-stat">
+                  <strong>{dataLoading ? "—" : clips.length.toString().padStart(2, "0")}</strong>
+                  <span className="eyebrow">HIGHLIGHTS</span>
+                </article>
+                <article className="journey-stat">
+                  <strong>{dataLoading ? "—" : journeyData.mapCounts.length.toString().padStart(2, "0")}</strong>
+                  <span className="eyebrow">MAPS</span>
+                </article>
+                <article className="journey-stat">
+                  <strong>{dataLoading ? "—" : journeyData.clutchCount.toString().padStart(2, "0")}</strong>
+                  <span className="eyebrow">CLUTCH HIGHLIGHTS</span>
+                </article>
+              </div>
+              {!dataLoading && journeyData.mapCounts.length > 0 && (
+                <div className="journey-map-links">
+                  <span className="eyebrow">EXPLORE MAPS</span>
+                  {journeyData.mapCounts.slice(0, 4).map(([map, count]) => (
+                    <button key={map} type="button" onClick={() => openMapHighlights(map)}>
+                      <MapIcon map={map}/>{map}<span>{count.toString().padStart(2, "0")}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
             <section className="journey-timeline" aria-label="The journey">
               <article className="journey-milestone">
                 <span className="journey-marker"><Crosshair size={17}/></span>
@@ -962,10 +1128,65 @@ function App() {
                 </div>
               </article>
             </section>
+            <section className="journey-picks" aria-labelledby="journey-picks-title">
+              <div className="journey-picks-heading">
+                <div>
+                  <span className="eyebrow">START HERE</span>
+                  <h2 id="journey-picks-title">A few rounds worth replaying.</h2>
+                </div>
+                <a href="#highlights">View all highlights <ArrowRight size={14}/></a>
+              </div>
+              {dataLoading && <p className="section-description" role="status">Loading highlights…</p>}
+              {!dataLoading && journeyClips.length > 0 && (
+                <div className="journey-clip-grid">
+                  {journeyClips.map((clip) => (
+                    <button className="journey-clip-card" key={clip.id} type="button" onClick={() => setModalClip(clip)} aria-label={`Play highlight: ${clip.title}`}>
+                      <span className="journey-clip-art"><Play size={22} fill="currentColor"/></span>
+                      <span className="journey-clip-info">
+                        <strong>{clip.title}</strong>
+                        <span className="journey-clip-meta"><MapName map={clip.map}/><span>{clip.tags.slice(0, 2).join(" · ")}</span></span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!dataLoading && !dataError && journeyClips.length === 0 && (
+                <p className="section-description">Highlights with videos will appear here as the collection grows.</p>
+              )}
+            </section>
             <footer className="journey-footer">
               <p className="eyebrow">THE STORY KEEPS GOING</p>
               <a className="primary-button" href="#highlights"><Clapperboard size={16}/> Explore the highlights</a>
             </footer>
+          </div>
+        </main>
+      ) : (
+        <main className="crosshairs-page" id="crosshairs">
+          <div className="crosshairs-layout">
+            <header className="crosshairs-heading">
+              <span className="eyebrow">AIM SETTINGS <span className="about-index">/ 03</span></span>
+              <h1>Pro player <em>crosshairs.</em></h1>
+              <p>Browse crosshair settings used by pro players, compare their styles, and copy a share code to try in CS2.</p>
+            </header>
+            <div className="crosshairs-tip">
+              <span className="crosshairs-tip-icon"><Crosshair size={17}/></span>
+              <p>To try one in CS2, open <strong>Settings → Game → Crosshair → Share or Import</strong>, then paste the copied code. Settings can change; see the linked source profile for the latest.</p>
+            </div>
+            <section className="crosshairs-database" aria-label="Pro player crosshairs">
+              <div className="crosshairs-results">
+                <span className="eyebrow">{crosshairPresets.length} PLAYERS</span>
+              </div>
+              <div className="crosshair-grid">
+                {crosshairPresets.map((preset) => (
+                  <CrosshairCard
+                    key={preset.id}
+                    preset={preset}
+                    feedback={crosshairCopyFeedback}
+                    onCopy={copyCrosshair}
+                  />
+                ))}
+              </div>
+            </section>
           </div>
         </main>
       )}
