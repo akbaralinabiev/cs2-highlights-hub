@@ -85,8 +85,7 @@
 .hero-trailer-caption .eyebrow,.hero-trailer-caption strong{white-space:nowrap}
 .hero-trailer-caption strong{font-size:13px;letter-spacing:-.03em}
 .hero-trailer-caption>span:last-child{color:#777;font-size:10px}
-@media(max-width:800px){.hero{display:flex;flex-direction:column;align-items:stretch;gap:26px}.hero-aside{position:relative;inset:auto;transform:none;width:min(100%,420px);height:auto;align-self:center;margin:0}}
-@media(max-width:560px){.hero-aside{width:min(100%,430px);margin-bottom:0}.hero-trailer-caption{padding:12px 14px}.hero-trailer-play{width:46px;height:46px}}
+@media(max-width:560px){.hero-trailer-caption{padding:12px 14px}.hero-trailer-play{width:46px;height:46px}}
 .map-icon{width:16px;height:16px;flex:none;object-fit:contain}
 .map-dropdown-label,.modal-map-name{display:inline-flex;align-items:center;gap:7px}
 .modal-map-name .map-icon{width:18px;height:18px}
@@ -94,3 +93,7 @@
 body{cursor:url("/scope-cursor.svg") 16 16,crosshair}
 a,button,select{cursor:pointer}
 input,textarea{cursor:text}
+.hero{display:flex;flex-direction:column;align-items:center;gap:26px}
+.hero-content{width:min(620px,100%);text-align:center}
+.hero-kicker,.hero-actions{justify-content:center}
+.hero-aside{position:relative;inset:auto;transform:none;width:min(430px,100%);height:auto;margin:0}
