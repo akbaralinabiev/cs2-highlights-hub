@@ -4,7 +4,7 @@ import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl, to
 import {
   Activity, ArrowLeft, Check, ChevronDown, CircleUserRound, Clapperboard, Code2, ExternalLink,
   Crosshair, Database, Eye, Film, Filter, Gamepad2, Grid2X2, HardDrive, Heart, MapPin,
-  LayoutDashboard, LogOut, Pencil, Plus, Search, Settings, ShieldCheck, Star,
+  LayoutDashboard, LogOut, Menu, Pencil, Plus, Search, Settings, ShieldCheck, Star,
   Trash2, UploadCloud, Video, X
 } from "lucide-react";
 
@@ -529,8 +529,10 @@ function App() {
   const [dataError, setDataError] = useState("");
   const [route, setRoute] = useState(
     window.location.hash === "#admin" ? "admin" :
-      window.location.hash === "#about" ? "about" : "highlights"
+      window.location.hash === "#about" ? "about" :
+        window.location.hash === "#journey" ? "journey" : "highlights"
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [mapFilter, setMapFilter] = useState("All maps");
   const [tagFilter, setTagFilter] = useState("All types");
@@ -540,6 +542,8 @@ function App() {
   const [editingClip, setEditingClip] = useState(null);
   const [sort, setSort] = useState("Newest first");
   const loadRequest = useRef(0);
+  const headerRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
   const [visitorId, setVisitorId] = useState(null);
 
   const loadClips = useCallback(async (includeUnpublished = false) => {
@@ -590,8 +594,10 @@ function App() {
   useEffect(() => {
     const syncAdminRoute = () => {
       const nextRoute = window.location.hash === "#admin" ? "admin" :
-        window.location.hash === "#about" ? "about" : "highlights";
+        window.location.hash === "#about" ? "about" :
+          window.location.hash === "#journey" ? "journey" : "highlights";
       setRoute(nextRoute);
+      setMobileMenuOpen(false);
       void loadClips(false);
     };
     window.addEventListener("hashchange", syncAdminRoute);
@@ -601,6 +607,16 @@ function App() {
       window.removeEventListener("hashchange", syncAdminRoute);
     };
   }, [loadClips]);
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (!headerRef.current?.contains(event.target)) setMobileMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+    };
+  }, [mobileMenuOpen]);
   const filtered = useMemo(() => clips.filter(c =>
     (mapFilter === "All maps" || c.map === mapFilter) &&
     (tagFilter === "All types" || c.tags.some(t => t.toLowerCase().includes(tagFilter.toLowerCase()))) &&
@@ -751,9 +767,40 @@ function App() {
 
   return (
     <div className="site-shell">
-      <header className="site-header">
+      <header className="site-header" ref={headerRef}>
         <button className="brand brand-button" onClick={goHome}><span className="brand-mark"><Crosshair size={19}/></span><span>THE<span className="brand-muted">FEAR14</span></span></button>
-        <nav className="main-nav"><a className={route === "highlights" ? "nav-active" : ""} href="#highlights">Highlights</a><a className={route === "about" ? "nav-active" : ""} href="#about">About</a></nav>
+        <nav className="main-nav"><a className={route === "highlights" ? "nav-active" : ""} href="#highlights">Highlights</a><a className={route === "about" ? "nav-active" : ""} href="#about">About</a><a className={route === "journey" ? "nav-active" : ""} href="#journey">Journey</a></nav>
+        <div
+          className="mobile-nav"
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && mobileMenuOpen) {
+              setMobileMenuOpen(false);
+              mobileMenuButtonRef.current?.focus();
+            }
+          }}
+        >
+          <button
+            ref={mobileMenuButtonRef}
+            className="mobile-nav-toggle"
+            type="button"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+          >
+            {mobileMenuOpen ? <X size={19}/> : <Menu size={19}/>}
+          </button>
+          <nav
+            className={`mobile-nav-menu ${mobileMenuOpen ? "is-open" : ""}`}
+            id="mobile-navigation"
+            aria-label="Mobile navigation"
+            aria-hidden={!mobileMenuOpen}
+          >
+            <a className={route === "highlights" ? "nav-active" : ""} href="#highlights" onClick={() => setMobileMenuOpen(false)}>Highlights</a>
+            <a className={route === "about" ? "nav-active" : ""} href="#about" onClick={() => setMobileMenuOpen(false)}>About</a>
+            <a className={route === "journey" ? "nav-active" : ""} href="#journey" onClick={() => setMobileMenuOpen(false)}>Journey</a>
+          </nav>
+        </div>
         <div className="header-actions"><span className="status-dot"/> <span className="online-label">PERSONAL FRAG MOVIE</span></div>
       </header>
       {route === "highlights" ? (
@@ -787,7 +834,7 @@ function App() {
           {filtered.length > 0 && filtered.length <= visibleClipCount && <div className="load-more"><span/> <span>YOU'VE REACHED THE END FOR NOW</span> <span/></div>}
           </section>
         </main>
-      ) : (
+      ) : route === "about" ? (
         <main className="about-page" id="about">
           <div className="about-layout">
             <section className="about-hero">
@@ -872,6 +919,54 @@ function App() {
               <span className="eyebrow">LINES OF CODE</span>
             </div>
           </footer>
+        </main>
+      ) : (
+        <main className="journey-page" id="journey">
+          <div className="journey-layout">
+            <header className="journey-heading">
+              <span className="eyebrow">PLAYER JOURNEY <span className="about-index">/ 02</span></span>
+              <h1>From the first round<br/>to the ones <em>worth keeping.</em></h1>
+              <p>A CS2 journey is built one round at a time. This is the thread behind the highlights: learning the game, finding a rhythm, and saving the moments that still feel good to replay.</p>
+            </header>
+            <section className="journey-timeline" aria-label="The journey">
+              <article className="journey-milestone">
+                <span className="journey-marker"><Crosshair size={17}/></span>
+                <div className="journey-card">
+                  <span className="eyebrow">STAGE 01 <span>/ THE FIRST ROUNDS</span></span>
+                  <h2>Learn the map. Find your footing.</h2>
+                  <p>Every match starts with the basics: learning the angles, reading the pace, and getting comfortable with the small decisions that shape a round.</p>
+                </div>
+              </article>
+              <article className="journey-milestone">
+                <span className="journey-marker"><Activity size={17}/></span>
+                <div className="journey-card">
+                  <span className="eyebrow">STAGE 02 <span>/ BUILDING THE RHYTHM</span></span>
+                  <h2>Good rounds are a team effort.</h2>
+                  <p>Clean entries, patient holds, and well-timed trades all add up. The best plays often begin before the first shot is fired.</p>
+                </div>
+              </article>
+              <article className="journey-milestone">
+                <span className="journey-marker"><Star size={17}/></span>
+                <div className="journey-card">
+                  <span className="eyebrow">STAGE 03 <span>/ MOMENTS WORTH SAVING</span></span>
+                  <h2>Some rounds stay with you.</h2>
+                  <p>A clutch, a sharp sequence, or a round that turns everything around—these are the moments that deserve another look.</p>
+                </div>
+              </article>
+              <article className="journey-milestone">
+                <span className="journey-marker"><Film size={17}/></span>
+                <div className="journey-card">
+                  <span className="eyebrow">STAGE 04 <span>/ THE COLLECTION</span></span>
+                  <h2>Keep the rounds. Share the story.</h2>
+                  <p>This highlight hub is a living archive: a place for the plays, the progress, and the memories made along the way.</p>
+                </div>
+              </article>
+            </section>
+            <footer className="journey-footer">
+              <p className="eyebrow">THE STORY KEEPS GOING</p>
+              <a className="primary-button" href="#highlights"><Clapperboard size={16}/> Explore the highlights</a>
+            </footer>
+          </div>
         </main>
       )}
       {modalClip && <Modal clip={clips.find((clip) => clip.id === modalClip.id) ?? modalClip} onClose={() => setModalClip(null)} onLike={toggleLike}/>}

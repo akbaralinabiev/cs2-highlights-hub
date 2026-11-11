@@ -43,6 +43,8 @@ a {
   overflow:hidden
 }
 .site-header {
+  position: relative;
+  z-index: 10;
   height: 76px;
   border-bottom: 1px solid #202020;
   display: flex;
@@ -105,6 +107,65 @@ a {
   left: 0;
   right: 0;
   background:var(--orange)
+}
+.mobile-nav {
+  display:none
+}
+.mobile-nav-toggle {
+  width: 38px;
+  height: 38px;
+  display:grid;
+  place-items:center;
+  border:1px solid #34302b;
+  border-radius:8px;
+  background:#141311;
+  color:#eee
+}
+.mobile-nav-toggle:hover,
+.mobile-nav-toggle:focus-visible {
+  border-color:#75402e;
+  color:var(--orange)
+}
+.mobile-nav-toggle:focus-visible {
+  outline:2px solid var(--orange);
+  outline-offset:3px
+}
+.mobile-nav-menu {
+  position:absolute;
+  z-index:20;
+  top:calc(100% + 10px);
+  right:0;
+  width:min(240px,calc(100vw - 32px));
+  display:none;
+  gap:4px;
+  padding:7px;
+  border:1px solid #34302b;
+  border-radius:10px;
+  background:#11100f;
+  box-shadow:0 16px 36px #000b
+}
+.mobile-nav-menu.is-open {
+  display:grid
+}
+.mobile-nav-menu a {
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  border-radius:6px;
+  color:#aaa;
+  font-size:13px;
+  transition:background .15s,color .15s
+}
+.mobile-nav-menu a:hover,
+.mobile-nav-menu a:focus-visible {
+  outline:0;
+  background:#211914;
+  color:#fff
+}
+.mobile-nav-menu a.nav-active {
+  color:#ff805e;
+  background:#24150f
 }
 .header-actions {
   display: flex;
@@ -1673,7 +1734,14 @@ footer {
   .main-nav {
     display:none
   }
+  .mobile-nav {
+    display:block;
+    margin-left:auto
+  }
   .online-label {
+    display:none
+  }
+  .header-actions {
     display:none
   }
   .hero {
@@ -2037,16 +2105,10 @@ footer {
     gap:12px
   }
   .main-nav {
-    display: flex;
-    gap: 12px;
-    font-size:11px
+    display:none
   }
 }
 @media(max-width:430px) {
-  .main-nav {
-    gap: 9px;
-    font-size:10px
-  }
   .brand {
     gap: 7px;
     letter-spacing:.1em
@@ -2569,6 +2631,109 @@ footer {
   color: #777;
   font-size: 8px;
 }
+.journey-page {
+  min-height: calc(100vh - 76px);
+  padding: clamp(42px,7vw,88px) clamp(20px,5vw,72px);
+  background:radial-gradient(ellipse at 82% 12%,#1b100c 0,transparent 34%),#090909
+}
+.journey-layout {
+  width: min(100%,960px);
+  margin:0 auto
+}
+.journey-heading {
+  max-width:760px;
+  margin-bottom:52px
+}
+.journey-heading h1 {
+  margin:20px 0 16px;
+  font-size:clamp(42px,6.2vw,72px);
+  line-height:1;
+  letter-spacing:-.07em
+}
+.journey-heading h1 em {
+  color:var(--orange);
+  font-style:normal
+}
+.journey-heading>p {
+  max-width:620px;
+  margin:0;
+  color:#999;
+  font-size:14px;
+  line-height:1.8
+}
+.journey-timeline {
+  position:relative;
+  display:grid;
+  gap:18px
+}
+.journey-timeline::before {
+  content:"";
+  position:absolute;
+  top:28px;
+  bottom:28px;
+  left:27px;
+  width:1px;
+  background:linear-gradient(180deg,#8b3c26,#34231d 80%,transparent)
+}
+.journey-milestone {
+  position:relative;
+  display:grid;
+  grid-template-columns:56px minmax(0,1fr);
+  align-items:start;
+  gap:16px
+}
+.journey-marker {
+  position:relative;
+  z-index:1;
+  width:56px;
+  height:56px;
+  display:grid;
+  place-items:center;
+  border:1px solid #553322;
+  border-radius:50%;
+  color:var(--orange);
+  background:#15110f;
+  box-shadow:0 0 22px #ff4d1a12
+}
+.journey-card {
+  min-width:0;
+  padding:22px 26px 24px;
+  border:1px solid #302722;
+  border-radius:10px;
+  background:linear-gradient(115deg,#151210,#0e0d0c 72%)
+}
+.journey-card>.eyebrow {
+  color:#a87a68;
+  font-size:9px
+}
+.journey-card>.eyebrow span {
+  color:#777
+}
+.journey-card h2 {
+  margin:13px 0 8px;
+  font-size:22px;
+  letter-spacing:-.045em
+}
+.journey-card p {
+  max-width:680px;
+  margin:0;
+  color:#929292;
+  font-size:12px;
+  line-height:1.8
+}
+.journey-footer {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  margin:38px 0 0 72px;
+  padding-top:24px;
+  border-top:1px solid #292929
+}
+.journey-footer p {
+  margin:0;
+  color:#777
+}
 .about-inventory-heading {
   display: flex;
   align-items: end;
@@ -2669,6 +2834,9 @@ footer {
   .about-page {
     padding:38px 22px
   }
+  .journey-page {
+    padding:48px 22px
+  }
   .about-hero {
     grid-template-columns: 1fr;
     gap: 28px;
@@ -2681,6 +2849,48 @@ footer {
 @media(max-width:560px) {
   .about-page {
     padding:34px 16px
+  }
+  .journey-page {
+    padding:40px 16px
+  }
+  .journey-heading {
+    margin-bottom:36px
+  }
+  .journey-heading h1 {
+    font-size:clamp(40px,11vw,58px)
+  }
+  .journey-heading>p {
+    font-size:13px
+  }
+  .journey-timeline {
+    gap:14px
+  }
+  .journey-timeline::before {
+    left:20px
+  }
+  .journey-milestone {
+    grid-template-columns:42px minmax(0,1fr);
+    gap:12px
+  }
+  .journey-marker {
+    width:42px;
+    height:42px
+  }
+  .journey-card {
+    padding:17px 16px 18px
+  }
+  .journey-card>.eyebrow {
+    font-size:8px
+  }
+  .journey-card h2 {
+    font-size:18px
+  }
+  .journey-footer {
+    align-items:flex-start;
+    flex-direction:column;
+    gap:14px;
+    margin:28px 0 0 54px;
+    padding-top:20px
   }
   .about-intro h1 {
     font-size:clamp(52px,15vw,76px)
