@@ -193,24 +193,25 @@ function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) 
   );
 }
 
-function TrailerCard() {
+function VideoCard({ src, label, title, ariaLabel, credit }) {
   return (
     <div className="hero-trailer-card">
       <div className="hero-trailer-screen">
         <video
           className="hero-trailer-video"
-          src="/cs2-release-trailer.mp4"
+          src={src}
           autoPlay
           controls
           muted
           playsInline
           preload="metadata"
-          aria-label="Counter-Strike 2 release trailer"
+          aria-label={ariaLabel}
         />
       </div>
-      <div className="hero-trailer-caption">
-        <span className="eyebrow">COUNTER-STRIKE 2</span>
-        <strong>Release trailer</strong>
+      <div className={`hero-trailer-caption ${credit ? "has-credit" : ""}`}>
+        <span className="eyebrow">{label}</span>
+        <strong>{title}</strong>
+        {credit && <span className="video-credit">Created by <a href={credit.href} target="_blank" rel="noopener noreferrer">{credit.label}</a></span>}
       </div>
     </div>
   );
@@ -751,7 +752,7 @@ function App() {
         <div className="header-actions"><span className="status-dot"/> <span className="online-label">PERSONAL FRAG MOVIE</span></div>
       </header>
       {route === "highlights" ? (
-        <main>
+        <main className="landing-page">
           <section className="hero">
             <div className="hero-grid"/>
             <div className="hero-content">
@@ -761,7 +762,7 @@ function App() {
               <div className="hero-actions"><a className="primary-button" href="#collection"><Clapperboard size={16}/> Explore highlights</a></div>
             </div>
             <div className="hero-aside">
-              <TrailerCard/>
+              <VideoCard src="/cs2-release-trailer.mp4" label="COUNTER-STRIKE 2"ariaLabel="Counter-Strike 2 release trailer"/>
             </div>
             <div className="hero-bottom"><span><Activity size={14}/> CLIP ARCHIVE</span><span>COUNTER-STRIKE 2 <b>●</b> PERSONAL COLLECTION</span><span>EST. 2026</span></div>
           </section>
@@ -787,14 +788,16 @@ function App() {
               <div className="about-intro">
                 <span className="eyebrow">PLAYER PROFILE <span className="about-index">/ 01</span></span>
                 <h1>Akbarali<br/><em>Nabiev.</em></h1>
-                <p className="about-bio">EX - UI/UX designer and frontend developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
+                <p className="about-bio">EX - UI/UX designer and web developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
                 <span className="about-location"><MapPin size={15}/> Warsaw, Poland</span>
               </div>
-              <div className="about-visual" aria-hidden="true">
-                <div className="about-visual-grid"/>
-                <div className="about-scope"><Crosshair size={148} strokeWidth={0.65}/></div>
-                <span className="about-visual-label">THE FEAR14 <b>·</b> ONLINE</span>
-                <span className="about-visual-corner">CS2 / 2026</span>
+              <div className="about-video-card">
+                <VideoCard
+                  src="/about-video.mp4"
+                  title="A cinematic recreation of HeavyGod’s Nuke moment in Unreal Engine."
+                  ariaLabel="Unreal Engine recreation of HeavyGod’s Nuke moment"
+                  credit={{ href: "https://www.youtube.com/@stasxivanov", label: "@stasxivanov" }}
+                />
               </div>
             </section>
 
