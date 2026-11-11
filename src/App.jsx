@@ -34,6 +34,7 @@ const inventoryTotalCents = inventoryItems.reduce(
 const MAX_VIDEO_SIZE_BYTES = 50_000_000;
 const MAX_VIDEO_SIZE_LABEL = "50 MB";
 const VIDEO_SIZE_ERROR = `Supabase's current Free plan limit is 50 MB per file. Compress the video or upgrade the Supabase plan to upload larger files.`;
+const CLIPS_PER_PAGE = 6;
 const tagColorClasses = {
   "3k": "tag-blue",
   "4k": "tag-purple",
@@ -533,6 +534,7 @@ function App() {
   const [search, setSearch] = useState("");
   const [mapFilter, setMapFilter] = useState("All maps");
   const [tagFilter, setTagFilter] = useState("All types");
+  const [visibleClipCount, setVisibleClipCount] = useState(CLIPS_PER_PAGE);
   const [modalClip, setModalClip] = useState(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editingClip, setEditingClip] = useState(null);
@@ -607,6 +609,9 @@ function App() {
     const order = new Date(b.createdAt ?? b.id).getTime() - new Date(a.createdAt ?? a.id).getTime();
     return sort === "Newest first" ? order : -order;
   }), [clips, mapFilter, tagFilter, search, sort]);
+  useEffect(() => {
+    setVisibleClipCount(CLIPS_PER_PAGE);
+  }, [search, mapFilter, tagFilter, sort]);
 
   const goHome = () => {
     setClips((previous) => previous.filter((clip) => clip.is_published));
@@ -776,9 +781,10 @@ function App() {
             <div className="filter-control"><Grid2X2 size={15}/><FilterDropdown label="Filter by highlight type" value={tagFilter} options={["All types", "3K", "4K", "Ace", "clutch", "Retake", "Entry"]} onChange={setTagFilter}/></div>
             <div className="sort-control"><span>Sort</span><FilterDropdown label="Sort highlights" value={sort} options={["Newest first", "Oldest first"]} onChange={setSort}/></div>
           </div>
-          <div className="clip-grid">{filtered.map(c => <ClipCard key={c.id} clip={c} onOpen={setModalClip} onLike={toggleLike}/>)}</div>
+          <div className="clip-grid">{filtered.slice(0, visibleClipCount).map(c => <ClipCard key={c.id} clip={c} onOpen={setModalClip} onLike={toggleLike}/>)}</div>
           {!dataLoading && !dataError && filtered.length === 0 && <div className="empty-state"><Search size={28}/><h3>No highlights found</h3><p>Try a different search or filter.</p><button className="secondary-button" onClick={() => {setSearch("");setMapFilter("All maps");setTagFilter("All types");}}>Clear filters</button></div>}
-          <div className="load-more"><span/> <span>YOU'VE REACHED THE END FOR NOW</span> <span/></div>
+          {filtered.length > visibleClipCount && <div className="load-more"><span/><button className="secondary-button" type="button" onClick={() => setVisibleClipCount(count => count + CLIPS_PER_PAGE)}>Load more highlights</button><span/></div>}
+          {filtered.length > 0 && filtered.length <= visibleClipCount && <div className="load-more"><span/> <span>YOU'VE REACHED THE END FOR NOW</span> <span/></div>}
           </section>
         </main>
       ) : (
