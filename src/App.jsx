@@ -868,7 +868,7 @@ function App() {
               <p>A personal CS2 highlight hub, built with <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">React</a> and <a href="https://supabase.com/" target="_blank" rel="noopener noreferrer">Supabase</a>. Video uploads, map filters, and plenty of thoughtful details bring it all together.</p>
             </div>
             <div className="about-build-stat" aria-label="More than 3,700 lines of source code">
-              <strong>3,700<span>+</span></strong>
+              <strong>3,900<span>+</span></strong>
               <span className="eyebrow">LINES OF CODE</span>
             </div>
           </footer>
