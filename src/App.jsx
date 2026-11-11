@@ -9,6 +9,18 @@ import {
 } from "lucide-react";
 
 const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis"];
+const inventoryItems = [
+  { category: "KNIFE", name: "StatTrak™ Nomad Knife | Tiger Tooth", wear: "Factory New", price: "$206.79", image: "/inventory-knife.png" },
+  { category: "GLOVES", name: "Specialist Gloves | Lt. Commander", wear: "Minimal Wear", price: "$228.63", image: "/inventory-gloves.png" },
+  { category: "PISTOL", name: "USP-S | Jawbreaker", wear: "Factory New", price: "$9.14", image: "/inventory-usp-s-jawbreaker.png" },
+  { category: "PISTOL", name: "Desert Eagle | Trigger Discipline", wear: "Factory New", price: "$17.21", image: "/inventory-desert-eagle-trigger-discipline.png" },
+  { category: "RIFLE", name: "M4A1-S | Black Lotus", wear: "Factory New", price: "$10.53", image: "/inventory-m4a1-s-black-lotus.png" },
+  { category: "SNIPER RIFLE", name: "AWP | Exothermic", wear: "Minimal Wear", price: "$8.30", image: "/inventory-awp-exothermic.png" },
+];
+const inventoryTotalCents = inventoryItems.reduce(
+  (total, item) => total + Math.round(Number(item.price.replace("$", "")) * 100),
+  0,
+);
 const MAX_VIDEO_SIZE_BYTES = 50_000_000;
 const MAX_VIDEO_SIZE_LABEL = "50 MB";
 const VIDEO_SIZE_ERROR = `Supabase's current Free plan limit is 50 MB per file. Compress the video or upgrade the Supabase plan to upload larger files.`;
@@ -731,7 +743,7 @@ function App() {
               <div className="about-intro">
                 <span className="eyebrow">PLAYER PROFILE <span className="about-index">/ 01</span></span>
                 <h1>Akbarali<br/><em>Nabiev.</em></h1>
-                <p className="about-bio">Ex - UI/UX designer and frontend developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
+                <p className="about-bio">EX - UI/UX designer and frontend developer based in Warsaw, Poland. I enjoy creating intuitive, polished web experiences—and when I’m away from the screen, I’m usually playing CS2. This is where I keep the rounds worth replaying.</p>
                 <span className="about-location"><MapPin size={15}/> Warsaw, Poland</span>
               </div>
               <div className="about-visual" aria-hidden="true">
@@ -765,6 +777,36 @@ function App() {
               </article>
             </section>
 
+            <section className="about-inventory" aria-labelledby="about-inventory-title">
+              <div className="about-inventory-heading">
+                <div>
+                  <span className="eyebrow">LOADOUT / MARKET SNAPSHOT</span>
+                  <h2 id="about-inventory-title">Inventory</h2>
+                </div>
+                <div className="about-inventory-summary">
+                  <p>Prices are static USD estimates, not live market data.</p>
+                  <p className="about-inventory-total">Total value <strong>${(inventoryTotalCents / 100).toFixed(2)}</strong></p>
+                </div>
+              </div>
+              <div className="about-inventory-grid">
+                {inventoryItems.map((item) => (
+                  <article className="about-item" key={item.name}>
+                    <div className="about-item-image">
+                      <img src={item.image} alt=""/>
+                    </div>
+                    <div className="about-item-details">
+                      <span className="about-item-category">{item.category}</span>
+                      <h3>{item.name}</h3>
+                      <p>{item.wear}</p>
+                    </div>
+                    <div className="about-item-price">
+                      <span>EST. VALUE</span>
+                      <strong>{item.price}</strong>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           </div>
         </main>
       )}
