@@ -8,7 +8,17 @@ import {
   Trash2, UploadCloud, Video, X
 } from "lucide-react";
 
-const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis"];
+const maps = ["All maps", "Mirage", "Cache", "Nuke", "Ancient", "Inferno", "Dust II", "Anubis", "Vertigo"];
+const mapIconPaths = {
+  Ancient: "/maps/ancient.svg",
+  Anubis: "/maps/anubis.svg",
+  Cache: "/maps/cache.svg",
+  "Dust II": "/maps/dust2.svg",
+  Inferno: "/maps/inferno.svg",
+  Mirage: "/maps/mirage.svg",
+  Nuke: "/maps/nuke.svg",
+  Vertigo: "/maps/vertigo.svg",
+};
 const inventoryItems = [
   { category: "KNIFE", name: "StatTrak™ Nomad Knife | Tiger Tooth", wear: "Factory New", price: "$206.79", image: "/inventory-knife.png" },
   { category: "GLOVES", name: "Specialist Gloves | Lt. Commander", wear: "Minimal Wear", price: "$228.63", image: "/inventory-gloves.png" },
@@ -44,7 +54,16 @@ function getTagColorClass(tag) {
   return tagColorClasses[tag.toLowerCase()] ?? "";
 }
 
-function FilterDropdown({ label, value, options, onChange }) {
+function MapIcon({ map }) {
+  const iconPath = mapIconPaths[map];
+  return iconPath ? <img className="map-icon" src={iconPath} alt="" aria-hidden="true"/> : null;
+}
+
+function MapName({ map, className = "map-name" }) {
+  return <span className={className}><MapIcon map={map}/>{map}</span>;
+}
+
+function FilterDropdown({ label, value, options, onChange, withMapIcons = false }) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(Math.max(0, options.indexOf(value)));
   const id = useId();
@@ -109,7 +128,7 @@ function FilterDropdown({ label, value, options, onChange }) {
           setOpen((isOpen) => !isOpen);
         }}
       >
-        <span>{value}</span>
+        <span>{withMapIcons ? <MapName map={value} className="map-dropdown-label"/> : value}</span>
         <ChevronDown size={14} aria-hidden="true" />
       </button>
       {open && (
@@ -125,7 +144,7 @@ function FilterDropdown({ label, value, options, onChange }) {
               onMouseEnter={() => setActiveIndex(index)}
               onClick={() => choose(option)}
             >
-              {option}
+              {withMapIcons ? <MapName map={option} className="map-dropdown-label"/> : option}
               {option === value && <Check size={14} aria-hidden="true" />}
             </button>
           ))}
@@ -166,7 +185,7 @@ function ClipCard({ clip, onOpen, onLike, admin, onDelete, onFeature, onEdit }) 
         </div>
         <div className="clip-divider" />
         <div className="clip-meta">
-          <span className="map-name"><span className="map-emblem">✦</span>{clip.map}</span>
+          <MapName map={clip.map}/>
           <span className="clip-date">{clip.date}</span>
         </div>
       </div>
@@ -184,7 +203,7 @@ function Modal({ clip, onClose, onLike }) {
           ? <video src={clip.videoUrl} controls autoPlay playsInline />
           : <><Video size={42}/><p>No video file is attached</p><small>This is a demo highlight.</small></>}</div>
         <div className="modal-content">
-          <div><span className="eyebrow">{clip.map}</span><h2>{clip.title}</h2></div>
+          <div><MapName map={clip.map} className="eyebrow modal-map-name"/><h2>{clip.title}</h2></div>
         </div>
         <div className="modal-engagement-row">
           <div className="tags">{clip.tags.map(t => <span key={t} className={`tag ${getTagColorClass(t)}`}>{t}</span>)}</div>
@@ -233,7 +252,7 @@ function HighlightFormModal({ clip, onClose, onSave }) {
             <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={e => { const selectedFile = e.target.files?.[0] || null; setFile(selectedFile); setError(selectedFile ? videoSizeError(selectedFile) : ""); }} />
           </label>
           <div className="field"><label htmlFor="title">Highlight title</label><input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. 1v3 clutch on Mirage" /></div>
-          <div className="field"><label>Map</label><div className="filter-control form-map-filter"><Filter size={15}/><FilterDropdown label="Map" value={map} options={maps.slice(1)} onChange={setMap}/></div></div>
+          <div className="field"><label>Map</label><div className="filter-control form-map-filter"><Filter size={15}/><FilterDropdown label="Map" value={map} options={maps.slice(1)} onChange={setMap} withMapIcons/></div></div>
           <fieldset className="field tag-picker"><legend>Highlight types</legend><div className="tag-picker-options">{["3K", "4K", "Ace", "1v2 clutch", "1v3 clutch", "Clutch", "Entry", "Retake"].map(type => <label key={type} className={`tag-choice ${tags.includes(type) ? "selected" : ""}`}><input type="checkbox" checked={tags.includes(type)} disabled={busy} onChange={() => setTags(current => current.includes(type) ? current.filter(item => item !== type) : [...current, type])}/><span>{type}</span></label>)}</div></fieldset>
           {busy && <div className="upload-progress"><span>Uploading video… {progress}%</span><progress max="100" value={progress}/></div>}
           {error && <p className="form-error" role="alert">{error}</p>}
@@ -718,7 +737,26 @@ function App() {
               <p>A collection of clutches, clean entries, and rounds worth remembering.</p>
               <div className="hero-actions"><a className="primary-button" href="#collection"><Clapperboard size={16}/> Explore highlights</a></div>
             </div>
-            <div className="hero-aside"><div className="crosshair-large"><Crosshair size={92} strokeWidth={0.8}/></div><span className="aside-line"/> <span className="aside-caption">RECORDED MOMENTS / 001—∞</span></div>
+            <div className="hero-aside" aria-label="CS2 release trailer video placeholder">
+              <div className="hero-trailer-card">
+                <div className="hero-trailer-screen">
+                  <video
+                    className="hero-trailer-video"
+                    src="/cs2-release-trailer.mp4"
+                    autoPlay
+                    controls
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-label="Counter-Strike 2 release trailer"
+                  />
+                </div>
+                <div className="hero-trailer-caption">
+                  <span className="eyebrow">COUNTER-STRIKE 2</span>
+                  <strong>Release trailer</strong>
+                </div>
+              </div>
+            </div>
             <div className="hero-bottom"><span><Activity size={14}/> CLIP ARCHIVE</span><span>COUNTER-STRIKE 2 <b>●</b> PERSONAL COLLECTION</span><span>EST. 2026</span></div>
           </section>
           <section className="highlights-section" id="collection">
@@ -727,7 +765,7 @@ function App() {
           {dataLoading && <p className="section-description" role="status">Loading highlights…</p>}
           <div className="filters">
             <div className="search-box"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search highlights..." /></div>
-            <div className="filter-control"><Filter size={15}/><FilterDropdown label="Filter by map" value={mapFilter} options={maps} onChange={setMapFilter}/></div>
+            <div className="filter-control"><Filter size={15}/><FilterDropdown label="Filter by map" value={mapFilter} options={maps} onChange={setMapFilter} withMapIcons/></div>
             <div className="filter-control"><Grid2X2 size={15}/><FilterDropdown label="Filter by highlight type" value={tagFilter} options={["All types", "3K", "4K", "Ace", "clutch", "Retake", "Entry"]} onChange={setTagFilter}/></div>
             <div className="sort-control"><span>Sort</span><FilterDropdown label="Sort highlights" value={sort} options={["Newest first", "Oldest first"]} onChange={setSort}/></div>
           </div>
